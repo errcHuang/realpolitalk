@@ -3,6 +3,27 @@ import sys
 import tweepy
 from tweepy import OAuthHandler
 
+
+def grabTweets(screenName, numTweets, fromID):
+    return api.user_timeline(screen_name = screenName, count = numTweets, max_id = fromID)
+
+def writeTweetsToFile(tweets, directory):
+    nameOfFile = str(tweets[0].author.screen_name) + '.txt'
+    writeFile = open(directory + '/' + nameOfFile, 'w')
+    for t in tweets:
+        writeFile.write(t.text.encode('ascii', 'ignore') + '\n')
+    writeFile.close()
+    return nameOfFile
+
+def resetCorpus():
+    os.system("rm -f clinton sanders trump cruz")
+    os.system("crm learn.crm clinton")
+    os.system("crm learn.crm sanders")
+    os.system("crm learn.crm trump")
+    os.system("crm learn.crm cruz")
+
+#resetCorpus()
+
 currentDir = os.path.dirname(os.path.abspath(__file__))
 
 #authentication stuff
@@ -16,19 +37,8 @@ auth.set_access_token(access_token, access_token_secret)
 
 api = tweepy.API(auth)
 
-
-def grabTweets(screenName, numTweets, fromID):
-    return api.user_timeline(screen_name = screenName, count = numTweets, max_id = fromID)
-
-def writeTweetsToFile(tweets, directory):
-    nameOfFile = str(tweets[0].author.screen_name) + '.txt'
-    writeFile = open(directory + '/' + nameOfFile, 'w')
-    for t in tweets:
-        writeFile.write(t.text.encode('ascii', 'ignore') + '\n')
-    writeFile.close()
-    return nameOfFile
-
 #grab initial 200 tweets for training
+
 #trumpTweets = api.user_timeline('realDonaldTrump', count = 200)
 #cruzTweets = api.user_timeline('SenTedCruz', count = 200)
 
