@@ -17,12 +17,20 @@ def writeTweetsToFile(tweets, directory):
 
 def resetCorpus():
     os.system("rm -f clinton sanders trump cruz")
-    os.system("crm learn.crm clinton")
-    os.system("crm learn.crm sanders")
-    os.system("crm learn.crm trump")
-    os.system("crm learn.crm cruz")
 
-#resetCorpus()
+    pipe = os.popen('crm learn.crm clinton', 'w')
+    pipe.close()
+    
+    
+    pipe = os.popen('crm learn.crm sanders', 'w')
+    pipe.close()
+
+    pipe = os.popen('crm learn.crm trump', 'w')
+
+    pipe = os.popen("crm learn.crm cruz", 'w')
+    pipe.close()
+
+resetCorpus()
 
 currentDir = os.path.dirname(os.path.abspath(__file__))
 
