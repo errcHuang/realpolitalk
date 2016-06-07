@@ -1,0 +1,10 @@
+{
+    window 
+    syscall () (:_dw:) /lynx --dump www.nytimes.com /
+    match /:*:_arg2:/
+    output / Hey there's news on :*:_arg2:\n/
+}
+alius
+{
+    output / There's no news on :*:_arg2: :( \n/
+}

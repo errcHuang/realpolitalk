@@ -1,0 +1,11 @@
+{
+    window # this WINDOW turns off the default read-to-EOF
+    input (:bash_words:) [/usr/share/doc/bash/FAQ]
+    {
+        window /.*/ / / (:_dw:)(:bash_words:)
+        match /./
+        output / Here's a word: ':*:_dw:' \n/
+        liaf
+    }
+    output / All done! \n/
+}

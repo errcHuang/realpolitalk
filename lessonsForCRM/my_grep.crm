@@ -1,0 +1,6 @@
+output /Looking for lines with a ':*:_arg2:' \n/
+{
+    match <nomultiline fromend> (:my_line:) /.*:*:_arg2:.*/
+    output /Found an :*:_arg2: here --> :*:my_line:\n/
+    liaf
+}

@@ -1,0 +1,6 @@
+{
+    isolate (:stats:)
+    classify <osb unique microgroom> (clinton sanders trump cruz) (:stats:)
+    output /:*:stats:/
+}
+

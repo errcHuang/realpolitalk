@@ -1,0 +1,4 @@
+{
+    match [ :_dw: /alpha.*omega/ ] /foo/
+    output /Yes, there is one \n/  
+}

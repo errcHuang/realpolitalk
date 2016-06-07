@@ -1,0 +1,8 @@
+{
+    output / The data window is --> :*:_dw: \n/
+        # grab hold of everything between foo and bar
+    match (:my_var:) /foo.*bar/
+    alter (:my_var:) /pepperoni pizza!/
+    output / The data window has changed to --> :*:_dw: \n/
+}
+

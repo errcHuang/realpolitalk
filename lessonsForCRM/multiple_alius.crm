@@ -1,0 +1,20 @@
+{
+    {
+        match /lion/
+        output / LION ROARS! \n/
+    }
+    alius
+    {
+        match /tiger/
+        output / Tiger leaps! \n/
+    }
+    alius
+    {
+        match /bear/
+        output / BEAR GROWLS \n/
+    }
+    alius
+    {
+        output /THIS PLACE SUCKS\n/
+    }
+}

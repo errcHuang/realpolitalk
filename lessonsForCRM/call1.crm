@@ -1,0 +1,15 @@
+{
+    output / This program replaces 'foo' with 'bar' \n/
+    output / Initial text= :*:_dw: \n/
+    call /:replace_it:/
+    output / New text= :*:_dw: \n/
+    exit
+}
+
+:replace_it:
+{
+    match (:my_foo:) <fromend> /foo/
+    alter (:my_foo:) /bar/
+    liaf
+}
+return

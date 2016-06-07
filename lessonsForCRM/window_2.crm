@@ -1,0 +1,9 @@
+{
+    window #window turns off default read-to-EOF
+    {
+        window /.*// /
+        output / Here's a word: ':*:_dw:' \n/
+        liaf
+    }
+    output / All done! \n/
+}

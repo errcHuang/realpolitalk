@@ -1,0 +1,18 @@
+{
+    output /We're replacing ':*:_arg2:' with ':*:_arg3:' \n /
+    output / Initial text= :*:_dw: \n/
+    call /:replace_it:/ [:*:_arg2: :*:_arg3:]
+    output / New text= :*:_dw: \n/
+    exit
+}
+
+:replace_it: (:my_args:)
+match [:my_args:] /([[:graph:]]+) ([[:graph:]]+)/ \
+    (:: :from_string: :to_string:)
+output / Replacing ':*:from_string:' with ':*:to_string:' \n/
+{
+    match (:my_foo:) <fromend> /:*:from_string:/
+    alter (:my_foo:) /:*:to_string:/
+    liaf
+}
+return

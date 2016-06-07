@@ -1,0 +1,9 @@
+{
+    window 
+    {
+        window /.*/ /[a-zA-Z]+/
+        output / Here's a word: ':*:_dw:' \n/
+        liaf
+    }
+    output / All done! \n/
+}

@@ -1,0 +1,10 @@
+{
+    output /remember /
+    {
+        match /ay+ lmao/
+        output /the aylmao\n/
+    }
+    output /\n/
+    
+}
+

@@ -1,0 +1,8 @@
+{
+    isolate (:my_dw_copy:) /:*:_dw:/
+    match [:my_dw_copy: 0 5] /.*/ (:first_five:)
+    output /My first-five characters are ':*:first_five:' \n/
+    alter (:_dw:) /hello world/
+    output /data window is not ':*:_dw:' \n/
+    output /my first-five chars are still ':*:first_five:' \n/
+}
