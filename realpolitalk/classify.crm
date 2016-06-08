@@ -1,0 +1,23 @@
+{
+    isolate (:stats:)
+    classify <osb unique microgroom> (clinton sanders trump cruz) (:stats:)
+    match [:stats:] (:: :best: :prob:) \
+        /Best match to file #. \(([[:graph:]]+)\) prob: ([0-9\.]+) /
+    match [:stats:] (:: :*:hillary_prob:) \
+        /\(clinton\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/
+    match [:stats:] (:: :*:bernie_prob:) \
+        /\(sanders\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/
+    match [:stats:] (:: :*:donald_prob:) \
+        /\(trump\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/
+    match [:stats:] (:: :*:ted_prob:) \
+        /\(cruz\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/
+    output /:*:best: :*:prob: :*:hillary_prob: :*:bernie_prob: :*:donald_prob: :*:ted_prob: \n/
+}
+alius 
+{
+output /FAILURE \n/
+}
+
+
+
+
