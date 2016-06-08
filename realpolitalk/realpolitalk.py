@@ -19,8 +19,8 @@ __api__ = tweepy.API(__auth__)
 
 
 
-def main(*screen_names):
-    
+def main():
+    #main(*screen_names)
     reset_corpus()
 
     currentDir = os.path.dirname(os.path.abspath(__file__))
@@ -123,12 +123,13 @@ def main(*screen_names):
 
     probList = classify(write_tweets_to_file(oldClinton, currentDir)).split()
     """
+    """#under construction
     for candidateTweets in test_tweets:
         for tweets in candidateTweets:
             for tweet in tweets:
                 trueAuthor = tweet.author.screen_name
                 bestMatchList, listOfProbList = classify(write_tweets_to_file(tweet, currentDir))
-
+    """
     #classify and split probabilities into list
     #bestMatch, probList = classify('speeches/clinton_NYVictorySpeech_apr202016.txt') #retrieve string output
 
@@ -141,6 +142,16 @@ def main(*screen_names):
 
 
     clean_workspace()
+
+def create_crm_files(screen_names_tuple):
+    CRM_BINARY = 'crm'
+    CLASSIFICATION_TYPE = '<osb unique microgroom>'
+    CLASSIFICATION_EXT = '.css'
+
+    LEARN_CMD = "{
+                    learn %s (:*:_arg2:)
+                 }" % CLASSIFICATION_TYPE
+
 
 #slices a list into n nearly-equal-length partitions
 #returns list of lists
@@ -180,7 +191,7 @@ def classify(textFileName):
 
 #deletes all crm114 corpus files and creates fresh ones
 def reset_corpus():
-    subprocess.call('rm -f clinton sanders trump cruz', shell=True)
+    subprocess.call('rm -f clinton sanders trump cruz', shell=True) #remove all corpus type files
 
     pipe = os.popen('crm learn.crm clinton', 'w')
     pipe.close()
