@@ -17,20 +17,26 @@ __auth__.set_access_token(__access_token__, __access_token_secret__)
 
 __api__ = tweepy.API(__auth__)
 
-def main():
+
+
+def main(*screen_names):
+    
     reset_corpus()
 
     currentDir = os.path.dirname(os.path.abspath(__file__))
     
     """
     #grab initial 200 tweets for training
-    trumpTweets = __api__.user_timeline('realDonaldTrump', count = 200)
+    trumpTweets = __api__.user_timeline('realDonaldTrump', count = 1)
+
+    print dir(trumpTweets[0].author)
+    sys.exit()
     cruzTweets = __api__.user_timeline('SenTedCruz', count = 200)
 
     clintonTweets = __api__.user_timeline('HillaryClinton', count = 200)
     sandersTweets = __api__.user_timeline('SenSanders', count = 200)
     print 'retrieved tweets'
-    """
+    #"""
     
     #grab all tweets
     clintonTweets = []
@@ -100,7 +106,7 @@ def main():
     """
 
     #partition tweets into training/test set
-    training_tweets, test_tweets = get_random_training_and_test_set(
+    training_tweets, test_tweets = get_training_and_test_set(0.8,
             clintonTweets, sandersTweets, trumpTweets, cruzTweets)
     #training_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
     
@@ -115,20 +121,24 @@ def main():
     #get older clinton tweets and classify
     oldClinton = grab_tweets('HillaryClinton', 10, clintonTweets[-1].id)
 
-    #classify and split probabilities into list
     probList = classify(write_tweets_to_file(oldClinton, currentDir)).split()
     """
-    probList = classify('speeches/clinton_NYVictorySpeech_apr202016.txt') #retrieve string output
-    probList = probList.split() 
-    bestMatch = (str(probList[0]), float(probList[1])) #(best_candidate, probability)
-    probList = probList[2:]
-    probList = [float(i) for i in probList] #convert probList into floats
+    for candidateTweets in test_tweets:
+        for tweets in candidateTweets:
+            for tweet in tweets:
+                trueAuthor = tweet.author.screen_name
+                bestMatchList, listOfProbList = classify(write_tweets_to_file(tweet, currentDir))
+
+    #classify and split probabilities into list
+    #bestMatch, probList = classify('speeches/clinton_NYVictorySpeech_apr202016.txt') #retrieve string output
 
     print bestMatch
     print "hillary %:", probList[0]
     print "bernie %:", probList[1]
     print "donald %:", probList[2]
     print "ted %:", probList[3]
+
+
 
     clean_workspace()
 
@@ -140,26 +150,33 @@ def random_partition(lst, n):
     return [ lst[int(round(division * i)): int(round(division * (i+1)))] for i in xrange(n) ]
 
 #Randomly resamples labeled datasets into comprehensive training set and test set
-#reshuffles data and returns training/test sets at random proportions
+#reshuffles data and returns training/test sets at 
 #each argument in *dataset should represent 1 "class" of a dataset
 #function reconstructs 
-def get_random_training_and_test_set(*dataset):
+def get_training_and_test_set(trainProportion, *dataset):
     training_data = []
     test_data = []
     for data in dataset:
         random.shuffle(data)
-        randIndex = random.choice(range(len(data))) #calculates random index in dataset
-        training_data.append(data[:randIndex]) #partitions training set from start to random index
-        test_data.append(data[randIndex:]) #partition test set from random index to end
+        trainIndex = trainProportion * len(data) #calculates index for end of training set
+        trainIndex = int(round(trainIndex))
+        training_data.append(data[:trainIndex]) #partitions training set from start to random index
+        test_data.append(data[trainIndex:]) #partition test set from random index to end
     return (training_data, test_data) 
 
 def train_classifier(candidate, trainingTxtFile):
     subprocess.call('crm learn.crm ' + candidate + ' < ' + trainingTxtFile, shell=True)
 
-# returns string that contains probabilities 
-# (bestMatch bestProb hillaryProb bernieProb donaldProb tedProb)
+# classifies textfile and returns best match and probabilities 
+# bestMatch = tuple(bestMatch bestProb) 
+# probList = tuple(hillaryProb bernieProb donaldProb tedProb)
 def classify(textFileName):
-    return subprocess.check_output('crm classify.crm < ' + textFileName, shell=True)
+    output =  subprocess.check_output('crm classify.crm < ' + textFileName, shell=True) #string output from crm114
+    probList = output.split() 
+    bestMatch = (str(probList[0]), float(probList[1])) #(best_candidate, probability)
+    probList = probList[2:]
+    probList = [float(i) for i in probList] #convert probList into floats
+    return (bestMatch, tuple(probList))
 
 #deletes all crm114 corpus files and creates fresh ones
 def reset_corpus():
