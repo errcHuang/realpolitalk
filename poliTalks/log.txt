@@ -1,0 +1,7 @@
+CLASSIFY succeeds; success probability: 1.0000  pR: 304.6527
+Best match to file #1 (sanders) prob: 1.0000  pR: 8.7896  
+Total features in input file: 6256
+#0 (clinton): features: 13367, hits: 3219, prob: 1.62e-09, pR:  -8.79 
+#1 (sanders): features: 15333, hits: 4033, prob: 1.00e+00, pR:   8.79 
+#2 (trump): features: 1, hits: 0, prob: 2.98e-31, pR: -30.53 
+#3 (cruz): features: 1, hits: 0, prob: 2.98e-31, pR: -30.53 
