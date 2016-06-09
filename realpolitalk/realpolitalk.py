@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import argparse
 import tweepy
 import random
 import pickle
@@ -19,11 +20,30 @@ __api__ = tweepy.API(__auth__)
 
 
 
-def main():
-    #main(*screen_names)
-    reset_corpus()
+def main(argv):
+    #command line parsing
+    parser = argparse.ArgumentParser(description='Train ML classifier from tweets.')
+    parser.add_argument('screen_names', nargs='+',
+                        help = 'a list of twitter screen names. e.g. HillaryClinton realDonaldTrump')
+    parser.add_argument('--trainpartition', '-t', nargs='?', default='.8', type=float, 
+                        help = 'portion of tweets allocated for training. rest is for testing')
+    parser.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='<osb unique microgroom>',
+                        help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
+    args = parser.parse_args()
 
+    #global vars
+    train_partition = args.trainpartition
+    screen_names = args.screen_names
+    
+    #check that trainpartion is between 0 and 1
+    if (not 0.0 <= train_partition <= 1.0):
+        sys.exit('--trainpartition must be between 0.0 and 1.0')
+
+    reset_corpus()
+    create_crm_files(args.screen_names, args.algorithm)
     currentDir = os.path.dirname(os.path.abspath(__file__))
+    
+    #alltweets = grab_tweets(screen_names)
     
     """
     #grab initial 200 tweets for training
@@ -37,8 +57,11 @@ def main():
     sandersTweets = __api__.user_timeline('SenSanders', count = 200)
     print 'retrieved tweets'
     #"""
+
     
     #grab all tweets
+    alltweets = []
+
     clintonTweets = []
     sandersTweets = []
     trumpTweets = []
@@ -106,7 +129,7 @@ def main():
     """
 
     #partition tweets into training/test set
-    training_tweets, test_tweets = get_training_and_test_set(0.8,
+    training_tweets, test_tweets = get_training_and_test_set(train_partition,
             clintonTweets, sandersTweets, trumpTweets, cruzTweets)
     #training_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
     
@@ -131,7 +154,7 @@ def main():
                 bestMatchList, listOfProbList = classify(write_tweets_to_file(tweet, currentDir))
     """
     #classify and split probabilities into list
-    #bestMatch, probList = classify('speeches/clinton_NYVictorySpeech_apr202016.txt') #retrieve string output
+    bestMatch, probList = classify('speeches/clinton_NYVictorySpeech_apr202016.txt') #retrieve string output
 
     print bestMatch
     print "hillary %:", probList[0]
@@ -142,17 +165,42 @@ def main():
 
 
     clean_workspace()
+def create_crm_files(screen_names, classification_type):
+    MATCH_VAR = 'match [:stats:] (:: :*:%s_prob:)' \
+                ' /\\(%s\\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/;'
 
-def create_crm_files(screen_names_tuple):
+    LEARN_CMD = "{ learn %s (:*:_arg2:) }"
+    CLASSIFY_CMD = "{ isolate (:stats:);" \
+            " classify %s ( %s ) (:stats:);" \
+            " match [:stats:] (:: :best: :prob:)" \
+            " /Best match to file #. \\(([[:graph:]]+)\\) prob: ([0-9\\.]+) /;" \
+            " %s " \
+            " output /:*:best: :*:prob: %s / }" # %output_list
+    
+    #create learn.crm
+    learnCRM = open('learn.crm', 'w')
+    learnCRM.write(LEARN_CMD % classification_type)
+    learnCRM.close()
+
+    #create classify.crm
+    classifyCRM = open('classify.crm', 'w')
+    match_list = [MATCH_VAR % (names, names) for names in screen_names] #create list of MATCH_VARs based on screen name 
+    output_list = [':*:%s_prob:' % names for names in screen_names] #create list for output
+
+    classifyCRM.write(CLASSIFY_CMD % (classification_type,
+                                      ' '.join(screen_names),
+                                      ' '.join(match_list), 
+                                      ' '.join(output_list)
+                                     ))
+    classifyCRM.close()
+
     CRM_BINARY = 'crm'
-    CLASSIFICATION_TYPE = '<osb unique microgroom>'
     CLASSIFICATION_EXT = '.css'
 
-    LEARN_CMD = "{
-                    learn %s (:*:_arg2:)
-                 }" % CLASSIFICATION_TYPE
-
-
+    #create corpus files
+    for n in screen_names:
+        subprocess.call('crm learn.crm ' + n + CLASSIFICATION_EXT)
+                                      
 #slices a list into n nearly-equal-length partitions
 #returns list of lists
 def random_partition(lst, n):
@@ -175,8 +223,8 @@ def get_training_and_test_set(trainProportion, *dataset):
         test_data.append(data[trainIndex:]) #partition test set from random index to end
     return (training_data, test_data) 
 
-def train_classifier(candidate, trainingTxtFile):
-    subprocess.call('crm learn.crm ' + candidate + ' < ' + trainingTxtFile, shell=True)
+def train_classifier(corpus_file, trainingTxtFile):
+    subprocess.call('crm learn.crm ' + corpus_file + ' < ' + trainingTxtFile, shell=True)
 
 # classifies textfile and returns best match and probabilities 
 # bestMatch = tuple(bestMatch bestProb) 
@@ -191,19 +239,8 @@ def classify(textFileName):
 
 #deletes all crm114 corpus files and creates fresh ones
 def reset_corpus():
-    subprocess.call('rm -f clinton sanders trump cruz', shell=True) #remove all corpus type files
+    subprocess.call('rm *.css', shell=True) #remove all corpus type files
 
-    pipe = os.popen('crm learn.crm clinton', 'w')
-    pipe.close()
-    
-    
-    pipe = os.popen('crm learn.crm sanders', 'w')
-    pipe.close()
-
-    pipe = os.popen('crm learn.crm trump', 'w')
-
-    pipe = os.popen("crm learn.crm cruz", 'w')
-    pipe.close()
 
 def clean_workspace():
     subprocess.call('rm *.txt', shell=True)
@@ -214,9 +251,9 @@ def clean_workspace():
 def grab_tweets(screenName, numTweets, fromID):
     return __api__.user_timeline(screen_name = screenName, count = numTweets, max_id = fromID)
 
-#Source: gist.github.com/yanofsky/5436496
+#source: gist.github.com/yanofsky/5436496
 def get_all_tweets(screen_name):
-    #initialize a list to hold all the tweepy Tweets
+    #initialize a list to hold all the tweepy tweets
     alltweets = []	
     
     #make initial request for most recent tweets (200 is the maximum allowed count)
@@ -244,18 +281,43 @@ def get_all_tweets(screen_name):
             print "...%s tweets downloaded so far" % (len(alltweets))
     return alltweets
     
-#saves tweets to text file under FirstnameLastname.txt by default
+#saves tweets to text file under firstnamelastname.txt by default
 #returns filename (string)
-#Note: make sure tweets isn't empty or else errors
+#note: make sure tweets isn't empty or else errors
 def write_tweets_to_file(tweets, directory):
-    nameOfFile = str(tweets[0].author.screen_name) + '.txt'
-    writeFile = open(directory + '/' + nameOfFile, 'w')
+    nameoffile = str(tweets[0].author.screen_name) + '.txt'
+    writefile = open(directory + '/' + nameoffile, 'w')
     for t in tweets:
-        writeFile.write(t.text.encode('ascii', 'ignore') + '\n')
-    writeFile.close()
-    return nameOfFile
+        writefile.write(t.text.encode('ascii', 'ignore') + '\n')
+    writefile.close()
+    return nameoffile
+
+
+def frange(*args):
+    """A float range generator."""
+    start = 0.0
+    step = 1.0
+
+    l = len(args)
+    if l == 1:
+        end = args[0]
+    elif l == 2:
+        start, end = args
+    elif l == 3:
+        start, end, step = args
+        if step == 0.0:
+            raise ValueError, "step must not be zero"
+    else:
+        raise TypeError, "frange expects 1-3 arguments, got %d" % l
+
+    v = start
+    while True:
+        if (step > 0 and v >= end) or (step < 0 and v <= end):
+            raise StopIteration
+        yield v
+        v += step
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
 
 
