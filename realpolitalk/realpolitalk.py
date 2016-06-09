@@ -18,7 +18,9 @@ __auth__.set_access_token(__access_token__, __access_token_secret__)
 
 __api__ = tweepy.API(__auth__)
 
+__current_dir__ = os.path.dirname(os.path.abspath(__file__))
 
+__directory__ = -1
 
 def main(argv):
     #command line parsing
@@ -29,11 +31,14 @@ def main(argv):
                         help = 'portion of tweets allocated for training. rest is for testing')
     parser.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='<osb unique microgroom>',
                         help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
+    parser.add_argument('--directory', '-d', nargs='?', type=str, default = __current_dir__,
+                        help = 'directory that all program files should go into')
     args = parser.parse_args()
 
     #global vars
     train_partition = args.trainpartition
     screen_names = args.screen_names
+    __directory__ = args.directory
     
     #check that trainpartion is between 0 and 1
     if (not 0.0 <= train_partition <= 1.0):
@@ -41,80 +46,10 @@ def main(argv):
 
     reset_corpus()
     create_crm_files(args.screen_names, args.algorithm)
-    currentDir = os.path.dirname(os.path.abspath(__file__))
-    
-    #alltweets = grab_tweets(screen_names)
-    
-    """
-    #grab initial 200 tweets for training
-    trumpTweets = __api__.user_timeline('realDonaldTrump', count = 1)
 
-    print dir(trumpTweets[0].author)
-    sys.exit()
-    cruzTweets = __api__.user_timeline('SenTedCruz', count = 200)
-
-    clintonTweets = __api__.user_timeline('HillaryClinton', count = 200)
-    sandersTweets = __api__.user_timeline('SenSanders', count = 200)
-    print 'retrieved tweets'
-    #"""
-
-    
     #grab all tweets
-    alltweets = []
-
-    clintonTweets = []
-    sandersTweets = []
-    trumpTweets = []
-    cruzTweets = []
-
-
-    #if tweets exist in offline binary files
-    if(os.path.isfile('trump.tweets') and 
-       os.path.isfile('cruz.tweets') and
-       os.path.isfile('clinton.tweets') and
-       os.path.isfile('sanders.tweets')):
-        tt = open('trump.tweets', 'rb')
-        ct = open('cruz.tweets', 'rb')
-        ht = open('clinton.tweets', 'rb')
-        st = open('sanders.tweets', 'rb')
-
-        print 'loading tweets from file...'
-        trumpTweets = pickle.load(tt)
-        cruzTweets = pickle.load(ct)
-        clintonTweets = pickle.load(ht)
-        sandersTweets = pickle.load(st)
-        print 'loaded all tweets.'
-
-        tt.close()
-        ct.close()
-        ht.close()
-        st.close()
-    else:  #retrieve tweets from online
-        print 'retrieving tweets from twitter...'
-        trumpTweets = get_all_tweets('realDonaldTrump')
-        cruzTweets = get_all_tweets('SenTedCruz')
-        clintonTweets = get_all_tweets('HillaryClinton')
-        sandersTweets = get_all_tweets('SenSanders')
-
-        #open files
-        tt = open('trump.tweets', 'wb')
-        ct = open('cruz.tweets', 'wb')
-        ht = open('clinton.tweets', 'wb')
-        st = open('sanders.tweets', 'wb')
-       
-        print 'saving tweets...'
-        #save tweets in binary file
-        pickle.dump(trumpTweets, tt)
-        pickle.dump(cruzTweets, ct)
-        pickle.dump(clintonTweets, ht)
-        pickle.dump(sandersTweets, st)
-        print 'saved tweets to file.'
-
-        #close all files
-        tt.close()
-        ct.close()
-        ht.close()
-        st.close()
+    all_tweets = grab_tweets(screen_names)
+    print 'retrieved all tweets'
     
 
     """
@@ -130,14 +65,14 @@ def main(argv):
 
     #partition tweets into training/test set
     training_tweets, test_tweets = get_training_and_test_set(train_partition,
-            clintonTweets, sandersTweets, trumpTweets, cruzTweets)
+            all_tweets)
     #training_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
+    #test_tweets = [ [list of clintonTweets], [list of sandersTweets], ...] 
     
     #train classifier
-    train_classifier('clinton', write_tweets_to_file(training_tweets[0], currentDir))
-    train_classifier('sanders', write_tweets_to_file(training_tweets[1], currentDir))
-    train_classifier('trump', write_tweets_to_file(training_tweets[2], currentDir))
-    train_classifier('cruz', write_tweets_to_file(training_tweets[3], currentDir))
+    for tweets in training_tweets:
+        screen_name = str(tweets[0].author.screen_name)
+        train(screen_name, tweets)
     print 'trained classifier.'
     
     """
@@ -178,7 +113,7 @@ def create_crm_files(screen_names, classification_type):
             " output /:*:best: :*:prob: %s / }" # %output_list
     
     #create learn.crm
-    learnCRM = open('learn.crm', 'w')
+    learnCRM = open(os.path.join(__directory__,'learn.crm'), 'w')
     learnCRM.write(LEARN_CMD % classification_type)
     learnCRM.close()
 
@@ -210,9 +145,8 @@ def random_partition(lst, n):
 
 #Randomly resamples labeled datasets into comprehensive training set and test set
 #reshuffles data and returns training/test sets at 
-#each argument in *dataset should represent 1 "class" of a dataset
-#function reconstructs 
-def get_training_and_test_set(trainProportion, *dataset):
+#the list 'dataset' should have lists that represent classes
+def get_training_and_test_set(trainProportion, dataset):
     training_data = []
     test_data = []
     for data in dataset:
@@ -223,8 +157,10 @@ def get_training_and_test_set(trainProportion, *dataset):
         test_data.append(data[trainIndex:]) #partition test set from random index to end
     return (training_data, test_data) 
 
-def train_classifier(corpus_file, trainingTxtFile):
-    subprocess.call('crm learn.crm ' + corpus_file + ' < ' + trainingTxtFile, shell=True)
+#note tweets must not be empty
+def train(screen_name, tweets):
+    trainingTxtFile = write_tweets_to_file(tweets,__directory__)
+    subprocess.call('crm learn.crm ' + screen_name + '.css' +' < ' + trainingTxtFile, shell=True)
 
 # classifies textfile and returns best match and probabilities 
 # bestMatch = tuple(bestMatch bestProb) 
@@ -239,17 +175,50 @@ def classify(textFileName):
 
 #deletes all crm114 corpus files and creates fresh ones
 def reset_corpus():
-    subprocess.call('rm *.css', shell=True) #remove all corpus type files
+    subprocess.call('rm -f *.css', shell=True) #remove all corpus type files
 
 
 def clean_workspace():
-    subprocess.call('rm *.txt', shell=True)
+    subprocess.call('rm -f *.txt', shell=True)
 
 
 """TWITTER RELATED FUNCTIONS"""
 
-def grab_tweets(screenName, numTweets, fromID):
+""" DEPRECATED
+def grab_tweets_from(screenName, numTweets, fromID):
     return __api__.user_timeline(screen_name = screenName, count = numTweets, max_id = fromID)
+"""
+
+#grabs all tweets in list of screen_names and returns one list with lists of tweets
+def grab_tweets(screen_names, save_offline = True):
+    LOCAL_FILE_EXT = '.tweets'
+
+    all_tweets = []
+
+
+    for name in screen_names:
+        complete_directory = os.path.join(__directory__, name + LOCAL_FILE_EXT)
+        if(os.path.isfile(complete_directory)):
+            tweetFile = open(name+LOCAL_FILE_EXT, 'rb')
+
+            print 'loading %s\'s tweets from file...' % name
+            tweets = pickle.load(tweetFile)
+            tweetFile.close()
+
+            all_tweets.extend(tweets) #add that person's tweetlist to big list
+        else:
+            print 'retrieving %s\'s tweets from twitter' % name
+            tweets = get_all_tweets(name)
+
+            if (save_offline):
+                tf = open(complete_directory, 'wb')
+
+                print 'saving %s\'s tweets to file...' % name
+                pickle.dump(tweets, tf)
+                tf.close()
+            
+            all_tweets.extend(tweets) #add person's tweetlist to biglist
+    return all_tweets
 
 #source: gist.github.com/yanofsky/5436496
 def get_all_tweets(screen_name):

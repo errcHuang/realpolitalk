@@ -1,9 +1,5 @@
-def args2(lmao):
-    print lmao
-def star_args(*args):
-    print type(args)
-    args2(args)
+def lmao(a, b=True):
+    if (b):
+        print a
 
-star_args('ay', 'lmao', 'lmfao')
-
-
+lmao('what')
