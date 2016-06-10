@@ -86,6 +86,8 @@ def main(argv):
             print trueAuthor
             matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor))
 
+            #TO-DO: SOMEHOW EVALUTE PROBLIST
+
             y_true.append(trueAuthor)
             y_pred.append(matchList[0])
     print y_true, y_pred
