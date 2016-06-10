@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import sys
-import contextlib
 import subprocess
 import argparse
 import tweepy
@@ -70,6 +69,7 @@ def main(argv):
 def train_command(args):
     #global vars
     screen_names = args.screen_names #screen names for training
+    all_tweets = []
 
     #---------  check flags ----------
 
@@ -84,8 +84,17 @@ def train_command(args):
     #--directory
     __directory__ = args.directory
 
-    #--offline
-    all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
+    try:
+        all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
+    except tweepy.TweepError as e:
+        if e.message[0]['code'] is 34:
+            print
+            print 'one or more of those twitter handles don\'t exist!'
+            print '(tip: check capitalization)'
+            sys.exit()
+        else:
+            raise e
+        
     print 'retrieved all tweets'
 
  
@@ -352,19 +361,6 @@ def write_tweets_to_file(tweets, directory, nameoffile = 'lmao.txt'):
         writefile.write(t.text.encode('ascii', 'ignore') + '\n')
     writefile.close()
     return nameoffile
-
-@contextlib.contextmanager
-def smart_open(filename=None):
-    if filename and filename != '-':
-        fh = open(filename, 'w')
-    else:
-        fh = sys.stdout
-
-    try:
-        yield fh
-    finally:
-        if fh is not sys.stdout:
-            fh.close()
 
 def plot_confusion_matrix(cm, labels, title='Confusion matrix', cmap=plt.cm.Blues):
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
