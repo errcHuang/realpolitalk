@@ -70,8 +70,21 @@ def train_command(args):
     #global vars
     screen_names = args.screen_names #screen names for training
     all_tweets = []
+    
+    try:
+        all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
+    except tweepy.TweepError as e:
+        if e.message[0]['code'] is 34:
+            print
+            print 'one or more of those twitter handles don\'t exist!'
+            print '(tip: check capitalization)'
+            sys.exit()
+        else:
+            raise e
+    print 'retrieved all tweets'
 
     #---------  check flags ----------
+
 
     #--trainpartition, check that trainpartion is between 0 and 1
     train_partition = args.trainpartition
@@ -84,20 +97,6 @@ def train_command(args):
     #--directory
     __directory__ = args.directory
 
-    try:
-        all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
-    except tweepy.TweepError as e:
-        if e.message[0]['code'] is 34:
-            print
-            print 'one or more of those twitter handles don\'t exist!'
-            print '(tip: check capitalization)'
-            sys.exit()
-        else:
-            raise e
-        
-    print 'retrieved all tweets'
-
- 
     training_tweets = []
     test_tweets = []
 
