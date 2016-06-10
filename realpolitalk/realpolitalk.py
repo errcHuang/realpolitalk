@@ -52,10 +52,10 @@ def main(argv):
     
     #create parser for 'reset' command
     parser_reset = subparsers.add_parser('reset', 
-         help = 'commands to delete saved files (corpus, tweets, crm).' )
+         help = 'commands to delete saved files (corpus, tweets, crm).')
     parser_reset.add_argument('--corpus', action='store_true', help = 'deletes all trained corpuses')
     parser_reset.add_argument('--tweets', action='store_true', help = 'deletes all saved offline tweets')
-    parser_reset.add_arguments('--all', action='store_true', help = 'deletes corpuses, tweets, and crm files')
+    parser_reset.add_argument('--all', action='store_true', help = 'deletes corpuses, tweets, and crm files')
     parser_reset.set_defaults(func = reset_command)
 
     #-classify - UNDER CONSTRUCTION
