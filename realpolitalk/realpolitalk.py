@@ -35,6 +35,7 @@ def main(argv):
                         help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
     parser.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
                         help = 'directory that all program files should go into')
+    parser.add_argument('--offline', action='store_true', help = 'use offline saved tweets')
     args = parser.parse_args()
 
     #global vars
@@ -50,7 +51,7 @@ def main(argv):
     create_crm_files(args.screen_names, args.algorithm)
 
     #grab all tweets
-    all_tweets = grab_tweets(screen_names)
+    all_tweets = grab_tweets(screen_names, args.offline) #set to False if want to download fresh tweets
     print 'retrieved all tweets'
 
 
@@ -71,9 +72,9 @@ def main(argv):
     #test_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
 
     #train classifier
-    for tweets in training_tweets:
-        screen_name = str(tweets[0].author.screen_name)
-        train(screen_name, tweets)
+    for someones_tweets in training_tweets:
+        screen_name = str(someones_tweets[0].author.screen_name)
+        train(screen_name, someones_tweets)
     print 'trained classifier.'
 
     #Testing (UNDER CONSTRUCTION)
@@ -83,8 +84,7 @@ def main(argv):
     for tweets in test_tweets:
         for t in tweets:
             trueAuthor = t.author.screen_name
-            print trueAuthor
-            matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor))
+            matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor + '.txt'))
 
             #TO-DO: SOMEHOW EVALUTE PROBLIST
 
@@ -163,8 +163,9 @@ def get_training_and_test_set(trainProportion, dataset):
 
 #note tweets must not be empty
 def train(screen_name, tweets):
-    trainingTxtFile = write_tweets_to_file(tweets,__directory__)
-    subprocess.call('crm ' + os.path.join(__directory__, 'learn.crm') + ' screen_name' + '.css' +' < ' + trainingTxtFile, shell=True)
+    trainingTxtFile = write_tweets_to_file(tweets,__directory__, screen_name + '.txt')
+    subprocess.call('crm ' + os.path.join(__directory__, 'learn.crm') + 
+            ' ' + (screen_name+'.css') + ' < '+ trainingTxtFile, shell=True)
 
 # classifies textfile and returns best match and probabilities
 # bestMatch = tuple(bestMatch bestProb)
@@ -193,13 +194,9 @@ def clean_workspace():
 
 """TWITTER RELATED FUNCTIONS"""
 
-""" DEPRECATED
-def grab_tweets_from(screenName, numTweets, fromID):
-    return __api__.user_timeline(screen_name = screenName, count = numTweets, max_id = fromID)
-"""
 
 #grabs all tweets in list of screen_names and returns one list with lists of tweets
-def grab_tweets(screen_names, save_offline = True):
+def grab_tweets(screen_names, use_offline = True):
     LOCAL_FILE_EXT = '.tweets'
 
     all_tweets = []
@@ -207,7 +204,7 @@ def grab_tweets(screen_names, save_offline = True):
 
     for name in screen_names:
         complete_directory = os.path.join(__directory__, name + LOCAL_FILE_EXT)
-        if(os.path.isfile(complete_directory)):
+        if(use_offline and os.path.isfile(complete_directory)):
             tweetFile = open(name+LOCAL_FILE_EXT, 'rb')
 
             print 'loading %s\'s tweets from file...' % name
@@ -217,25 +214,25 @@ def grab_tweets(screen_names, save_offline = True):
             all_tweets.append(tweets) #add that person's tweetlist to big list
         else:
             print 'retrieving %s\'s tweets from twitter' % name
-            tweets = get_all_tweets(name)
+            tweets = get_all_tweets(name, False)
 
-            if (save_offline):
-                tf = open(complete_directory, 'wb')
+            tf = open(complete_directory, 'wb')
 
-                print 'saving %s\'s tweets to file...' % name
-                pickle.dump(tweets, tf)
-                tf.close()
+            print 'saving %s\'s tweets to file...' % name
+            pickle.dump(tweets, tf)
+            tf.close()
 
             all_tweets.append(tweets) #add person's tweetlist to biglist
     return all_tweets
 
 #source: gist.github.com/yanofsky/5436496
-def get_all_tweets(screen_name):
+def get_all_tweets(screen_name, include_retweets = True):
     #initialize a list to hold all the tweepy tweets
     alltweets = []
 
     #make initial request for most recent tweets (200 is the maximum allowed count)
     new_tweets = __api__.user_timeline(screen_name = screen_name,count=200)
+
 
     #save most recent tweets
     alltweets.extend(new_tweets)
@@ -257,12 +254,19 @@ def get_all_tweets(screen_name):
             oldest = alltweets[-1].id - 1
 
             print "...%s tweets downloaded so far" % (len(alltweets))
+    #parse out t.co links - TO-DO
+    #alltweets = [for t in alltweets t.text.find('https://t.co')
+
+    if (include_retweets is False): #filter out retweets
+        print 'parsing out retweets...'
+        alltweets = [t for t in alltweets if (t.text.startswith('RT') is False) 
+                    and t.text.startswith('"') is False] 
     return alltweets
 
 #saves tweets to text file under firstnamelastname.txt by default
 #returns filename (string)
 #note: make sure tweets isn't empty or else errors
-def write_tweets_to_file(tweets, directory, nameoffile = 'lmao'):
+def write_tweets_to_file(tweets, directory, nameoffile = 'lmao.txt'):
     writefile = open(os.path.join(directory,  nameoffile), 'w')
     for t in tweets:
         writefile.write(t.text.encode('ascii', 'ignore') + '\n')
