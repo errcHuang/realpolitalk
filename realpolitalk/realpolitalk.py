@@ -110,7 +110,7 @@ def create_crm_files(screen_names, classification_type):
             " /Best match to file #. \\(([[:graph:]]+)\\) prob: ([0-9\\.]+) /;" \
             " %s " \
             " match [:best:] (:: :best_match:) /([[:graph:]]+).css/;" \
-            " output /:*:best_match: :*:prob: \\n %s / }" # %output_list
+            " output /:*:best_match: :*:prob: \\n %s\\n / }" # %output_list
     CLASSIFY_EXT = '.css'
     MATCH_VAR = 'match [:stats:] (:: :%s_prob:)' \
                 ' /\\(%s\\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/;'
