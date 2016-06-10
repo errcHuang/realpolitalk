@@ -46,15 +46,16 @@ def main(argv):
     parser_train.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
                         help = 'directory that all program files should go into')
     parser_train.add_argument('--offline', action='store_true', help = 'use offline saved tweets')
-    parser_train.add_argument('--resetcorpus', action='store_true', help = 'delete all trained corpuses')
-    parser_train.add_argument('--resettweets', action='store_true', help = 'delete all saved offline tweets')
-    parser_train.add_argument('--resetall', action='store_true', help = 'delete all trained corpuses and offline tweets')
     parser_train.add_argument('--eval', nargs='?', type=argparse.FileType('w'), const = sys.stdout, 
             help = 'evalute effectiveness of algorithm by separating tweets into training/test sets and printing model evaluation statistics')
     parser_train.set_defaults(func=train_command)
     
     #create parser for 'reset' command
-    parser_reset = subparsers.add_parser('reset', help='delete corpuses, tweets, crm files')
+    parser_reset = subparsers.add_parser('reset', 
+         help = 'commands to delete saved files (corpus, tweets, crm).' )
+    parser_reset.add_argument('--corpus', action='store_true', help = 'deletes all trained corpuses')
+    parser_reset.add_argument('--tweets', action='store_true', help = 'deletes all saved offline tweets')
+    parser_reset.add_arguments('--all', action='store_true', help = 'deletes corpuses, tweets, and crm files')
     parser_reset.set_defaults(func = reset_command)
 
     #-classify - UNDER CONSTRUCTION
@@ -87,14 +88,7 @@ def train_command(args):
     all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
     print 'retrieved all tweets'
 
-    #--resetcorpus/--resetall
-    if (args.resetcorpus is True or args.resetall is True):
-        subprocess.call('rm -f *.css', shell=True) #remove all corpus type files
-
-    #--resettweets/--resetall
-    if (args.resettweets is True or args.resetall is True):
-        subprocess.call('rm -f *.tweets', shell=True)
-
+ 
     training_tweets = []
     test_tweets = []
 
@@ -168,7 +162,17 @@ def classify_command(args):
 
 
 def reset_command(args):
-    subprocess.call('rm *.tweets *.crm *.css', shell=True)
+   #--corpus/--resetall
+    if (args.corpus is True or args.all is True):
+        subprocess.call('rm -f *.css', shell=True) #remove all corpus type files
+
+    #--tweets/--all
+    if (args.tweets is True or args.all is True):
+        subprocess.call('rm -f *.tweets', shell=True)
+
+    if (args.all is True):
+        subprocess.call('rm *.crm', shell=True)
+
 
 def crm_files_exist(screen_names):
     #check if files exit already
