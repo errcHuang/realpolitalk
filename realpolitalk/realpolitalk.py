@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import sys
+import contextlib
 import subprocess
 import argparse
 import tweepy
@@ -48,32 +49,31 @@ def main(argv):
     parser_train.add_argument('--resetcorpus', action='store_true', help = 'delete all trained corpuses')
     parser_train.add_argument('--resettweets', action='store_true', help = 'delete all saved offline tweets')
     parser_train.add_argument('--resetall', action='store_true', help = 'delete all trained corpuses and offline tweets')
-    parser_train.add_argument('--eval', action='store_true', 
+    parser_train.add_argument('--eval', nargs='?', type=argparse.FileType('w'), const = sys.stdout, 
             help = 'evalute effectiveness of algorithm by separating tweets into training/test sets and printing model evaluation statistics')
     parser_train.set_defaults(func=train_command)
     
-    """ UNDER CONSTRUCTION
-    #create parser for reset command
+    #create parser for 'reset' command
     parser_reset = subparsers.add_parser('reset', help='delete corpuses, tweets, crm files')
     parser_reset.set_defaults(func = reset_command)
 
     #-classify - UNDER CONSTRUCTION
-    #parser.add_argument('-classify', '-c', nargs=
-    """
+    parser_classify = subparsers.add_parser('classify', help='classify textfile(s) based on trained corpuses')
+    parser_classify.add_argument('textfiles', nargs='+', type=str, help='textfiles for classifying. E.g. test.txt')
+    parser_classify.set_defaults(func = classify_command)
     
     #parse the args and call whichever function was selected (func=...)
     args = parser.parse_args()
     args.func(args)
 
 def train_command(args):
-
     #global vars
-    train_partition = args.trainpartition
     screen_names = args.screen_names #screen names for training
 
-    #check flags for train command
+    #---------  check flags ----------
 
     #--trainpartition, check that trainpartion is between 0 and 1
+    train_partition = args.trainpartition
     if (not 0.0 <= train_partition <= 1.0):
         sys.exit('--trainpartition must be between 0.0 and 1.0')
     
@@ -88,17 +88,25 @@ def train_command(args):
     print 'retrieved all tweets'
 
     #--resetcorpus/--resetall
-    if (args.resetcorpus or args.resetall):
+    if (args.resetcorpus is True or args.resetall is True):
         subprocess.call('rm -f *.css', shell=True) #remove all corpus type files
 
     #--resettweets/--resetall
-    if (args.resettweets or args.resetall):
+    if (args.resettweets is True or args.resetall is True):
         subprocess.call('rm -f *.tweets', shell=True)
 
-    #partition tweets into training/test set
-    training_tweets, test_tweets = get_training_and_test_set(train_partition, all_tweets)
-    #training_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
-    #test_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
+    training_tweets = []
+    test_tweets = []
+
+    #if --eval flag used, divide tweets into training and partitioning sets
+    if (args.eval is not None):
+        #structure of lists:
+        #   training_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
+        #   test_tweets = [ [list of clintonTweets], [list of sandersTweets], ...]
+        training_tweets, test_tweets = get_training_and_test_set(train_partition, all_tweets)
+    else:
+        training_tweets = all_tweets
+
 
     #train classifier
     for someones_tweets in training_tweets:
@@ -106,36 +114,61 @@ def train_command(args):
         train(screen_name, someones_tweets)
     print 'trained classifier.'
 
-    
-    #Testing (UNDER CONSTRUCTION)
-    print 'evaluating algorithm...'
-    y_true = []
-    y_pred = []
-    for tweets in test_tweets:
-        for t in tweets:
-            trueAuthor = t.author.screen_name
-            matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor + '.txt'))
+    #if --eval flag is used, then classify test set and print statistics
+    if (args.eval is not None):
+        #Testing (UNDER CONSTRUCTION)
+        print 'evaluating algorithm...'
 
-            #TO-DO: SOMEHOW EVALUTE PROBLIST
-            print probList
+        #statistics_file = open(os.path.join(__directory__, 
 
-            y_true.append(trueAuthor)
-            y_pred.append(matchList[0])
-    #Compute Accuracy Score
-    print 'Accuracy score (normalized):', accuracy_score(y_true, y_pred)
-    #Confusion Matrix
-    cm = confusion_matrix(y_true, y_pred, labels=screen_names)
-    print cm
-    plt.figure()
-    plot_confusion_matrix(cm, screen_names)
-    plt.show()
-    #Classification report
-    print(classification_report(y_true, y_pred, target_names=screen_names))
+        y_true = []
+        y_pred = []
+        print >>args.eval,'------ BEST MATCH AND PROBABILITIES ------'
+        for tweets in test_tweets:
+            for t in tweets:
+                trueAuthor = t.author.screen_name
+                matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor + '.txt'))
 
+                #Write best match and probabilities either to std.out or to file
+                print >>args.eval, 'best match: ' + matchList[0]
+                print >>args.eval, 'probabilities:'
+                for tup in probList:
+                    print >>args.eval, '\t' + str(tup[0]) + ': ' + str(tup[1])
+                print >>args.eval, ''
 
-    #classify and split probabilities into list
-    #bestMatch, probList = classify('speeches/clinton_NYVictorySpeech_apr202016.txt') #retrieve string output
+                y_true.append(trueAuthor)
+                y_pred.append(matchList[0])
+        print >>args.eval,'\n'
+
+        print >>args.eval,'------ EVALUATION STATS ------'
+        #Compute Accuracy Score
+        print >>args.eval, 'Accuracy score (normalized):', accuracy_score(y_true, y_pred)
+        #Confusion Matrix
+        cm = confusion_matrix(y_true, y_pred, labels=screen_names)
+        print >>args.eval, 'Confusion matrix:\n', cm
+        #plt.figure()
+        #plot_confusion_matrix(cm, screen_names)
+        #plt.show()
+
+        #Classification report
+        print >>args.eval, classification_report(y_true, y_pred, target_names=screen_names)
+
+        args.eval.close()
+
     clean_workspace()
+
+def classify_command(args):
+    for file in args.textfiles:
+        print 'best match: ' + matchList[0]
+        print 'probabilities:'
+        for tup in ProbList:
+            print '\t' + tup[0] + '\t' + tup[1]
+        print 
+
+
+
+def reset_command(args):
+    subprocess.call('rm *.tweets *.crm *.css', shell=True)
 
 def crm_files_exist(screen_names):
     #check if files exit already
@@ -247,7 +280,7 @@ def grab_tweets(screen_names, use_offline = True):
     for name in screen_names:
         complete_directory = os.path.join(__directory__, name + LOCAL_FILE_EXT)
         if(use_offline and os.path.isfile(complete_directory)):
-            tweetFile = open(name+LOCAL_FILE_EXT, 'rb')
+            tweetFile = open(complete_directory, 'rb')
 
             print 'loading %s\'s tweets from file...' % name
             tweets = pickle.load(tweetFile)
@@ -315,30 +348,18 @@ def write_tweets_to_file(tweets, directory, nameoffile = 'lmao.txt'):
     writefile.close()
     return nameoffile
 
-
-def frange(*args):
-    """A float range generator."""
-    start = 0.0
-    step = 1.0
-
-    l = len(args)
-    if l == 1:
-        end = args[0]
-    elif l == 2:
-        start, end = args
-    elif l == 3:
-        start, end, step = args
-        if step == 0.0:
-            raise ValueError, "step must not be zero"
+@contextlib.contextmanager
+def smart_open(filename=None):
+    if filename and filename != '-':
+        fh = open(filename, 'w')
     else:
-        raise TypeError, "frange expects 1-3 arguments, got %d" % l
+        fh = sys.stdout
 
-    v = start
-    while True:
-        if (step > 0 and v >= end) or (step < 0 and v <= end):
-            raise StopIteration
-        yield v
-        v += step
+    try:
+        yield fh
+    finally:
+        if fh is not sys.stdout:
+            fh.close()
 
 def plot_confusion_matrix(cm, labels, title='Confusion matrix', cmap=plt.cm.Blues):
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
