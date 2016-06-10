@@ -25,68 +25,75 @@ __api__ = tweepy.API(__auth__)
 __directory__ = '' #placeholder for directory
 
 def main(argv):
-    #command line parsing
-    #note: users are required to use one of the following flags: -train, -classify, -reset
-    parser = argparse.ArgumentParser(description='Train ML classifier from tweets.\n' \
-                                                 'Note: users are required to use one of the following flags:\n' \
-                                                 '\t-train\n' \
-                                                 '\t-classify\n' \
-                                                 '\t-reset\n')
-    #-train and all its optional flags
-    parser.add_argument('-train', '-t', nargs='+', 
-                        help = 'train %(prog)s to learn from politicians tweets. e.g. -train POTUS VP')
-    parser.add_argument('--trainpartition', '-tp', nargs='?', default='.8', type=float,
+    #Create top level parser
+    parser = argparse.ArgumentParser(
+            description='Machine learning classifier that learns people\'s speech patterns via their tweets.', 
+            prog='PROG')
+    subparsers = parser.add_subparsers(help='Use one of the following three commands:\n' \
+                                            '\ttrain --help\n' \
+                                            '\tclassify --help\n' \
+                                            '\treset --help\n')
+
+    #create parser for 'train' command
+    parser_train = subparsers.add_parser('train', help='given twitter handles, train the classifier')
+    parser_train.add_argument('screen_names', nargs='+', 
+                        help = 'twitter handles for those whose tweets you want to use to train the classifier')
+    parser_train.add_argument('--trainpartition', '-tp', nargs='?', default='.8', type=float,
                         help = 'portion of tweets allocated for training. rest is for testing')
-    parser.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='<osb unique microgroom>',
+    parser_train.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='<osb unique microgroom>',
                         help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
-    parser.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
+    parser_train.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
                         help = 'directory that all program files should go into')
-    parser.add_argument('--offline', action='store_true', help = 'use offline saved tweets')
-    parser.add_argument('--resetcorpus', action='store_true', help = 'delete all trained corpuses')
-    parser.add_argument('--resettweets', action='store_true', help = 'delete all saved offline tweets')
-    parser.add_argument('--resetall', action='store_true', help = 'delete all trained corpuses and offline tweets')
-    parser.add_argument('--eval', action='store_true', 
+    parser_train.add_argument('--offline', action='store_true', help = 'use offline saved tweets')
+    parser_train.add_argument('--resetcorpus', action='store_true', help = 'delete all trained corpuses')
+    parser_train.add_argument('--resettweets', action='store_true', help = 'delete all saved offline tweets')
+    parser_train.add_argument('--resetall', action='store_true', help = 'delete all trained corpuses and offline tweets')
+    parser_train.add_argument('--eval', action='store_true', 
             help = 'evalute effectiveness of algorithm by separating tweets into training/test sets and printing model evaluation statistics')
+    parser_train.set_defaults(func=train_command)
     
-    #-reset
-    parser.add_argument('-reset', '-r', action='store_true', help = 'delete all corpuses, tweets, crm files')
+    """ UNDER CONSTRUCTION
+    #create parser for reset command
+    parser_reset = subparsers.add_parser('reset', help='delete corpuses, tweets, crm files')
+    parser_reset.set_defaults(func = reset_command)
 
     #-classify - UNDER CONSTRUCTION
     #parser.add_argument('-classify', '-c', nargs=
-
-
+    """
+    
+    #parse the args and call whichever function was selected (func=...)
     args = parser.parse_args()
+    args.func(args)
+
+def train_command(args):
 
     #global vars
     train_partition = args.trainpartition
-    screen_names = args.train #screen names for training
-    __directory__ = args.directory
+    screen_names = args.screen_names #screen names for training
 
-    #check that trainpartion is between 0 and 1
+    #check flags for train command
+
+    #--trainpartition, check that trainpartion is between 0 and 1
     if (not 0.0 <= train_partition <= 1.0):
         sys.exit('--trainpartition must be between 0.0 and 1.0')
+    
+    #--algorithm
+    create_crm_files(screen_names, args.algorithm)
 
-    if (args.resetcorpus):
-       reset_corpus()
+    #--directory
+    __directory__ = args.directory
 
-    if (crm_files_exist(screen_names)):
-        create_crm_files(screen_names, args.algorithm)
-
-    #grab all tweets
-    all_tweets = grab_tweets(screen_names, args.offline) #set to False if want to download fresh tweets
+    #--offline
+    all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
     print 'retrieved all tweets'
 
+    #--resetcorpus/--resetall
+    if (args.resetcorpus or args.resetall):
+        subprocess.call('rm -f *.css', shell=True) #remove all corpus type files
 
-    """
-    #randomly partition tweets into 10 subsamples
-    clinton_subsamples = random_partition(clintonTweets, 10)
-    sanders_subsamples = random_partition(sandersTweets, 10)
-    trump_subsamples = random_partition(trumpTweets, 10)
-    cruz_subsamples = random_partition(cruzTweets, 10)
-
-
-    #future cross validation steps would be to train on some subsamples, test on others
-    """
+    #--resettweets/--resetall
+    if (args.resettweets or args.resetall):
+        subprocess.call('rm -f *.tweets', shell=True)
 
     #partition tweets into training/test set
     training_tweets, test_tweets = get_training_and_test_set(train_partition, all_tweets)
@@ -221,10 +228,6 @@ def classify(textFileName):
         probList.append((x, float(next(it))))
 
     return (bestMatch, tuple(probList))
-
-#deletes all crm114 corpus files and creates fresh ones
-def reset_corpus():
-    subprocess.call('rm -f *.css', shell=True) #remove all corpus type files
 
 
 def clean_workspace():
