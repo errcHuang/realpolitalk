@@ -148,17 +148,18 @@ def train_command(args):
         print >>args.eval, classification_report(y_true, y_pred, target_names=screen_names)
 
         args.eval.close()
-
     clean_workspace()
 
 def classify_command(args):
-    for file in args.textfiles:
-        print 'best match: ' + matchList[0]
+    for files in args.textfiles:
+        bestMatch, probList = classify(str(files))
+        print 'best match: ' + bestMatch[0]
         print 'probabilities:'
-        for tup in ProbList:
-            print '\t' + tup[0] + '\t' + tup[1]
+        for tup in probList:
+            print '\t' + str(tup[0]) + ': ' + str(tup[1])
         print 
 
+    #clean_workspace()
 
 
 def reset_command(args):
