@@ -1,5 +1,5 @@
 from tweepy import OAuthHandler
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import *
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -22,33 +22,55 @@ __auth__.set_access_token(__access_token__, __access_token_secret__)
 __api__ = tweepy.API(__auth__)
 
 
-__directory__ = ''
+__directory__ = '' #placeholder for directory
 
 def main(argv):
     #command line parsing
-    parser = argparse.ArgumentParser(description='Train ML classifier from tweets.')
-    parser.add_argument('screen_names', nargs='+',
-                        help = 'a list of twitter screen names. e.g. HillaryClinton realDonaldTrump')
-    parser.add_argument('--trainpartition', '-t', nargs='?', default='.8', type=float,
+    #note: users are required to use one of the following flags: -train, -classify, -reset
+    parser = argparse.ArgumentParser(description='Train ML classifier from tweets.\n' \
+                                                 'Note: users are required to use one of the following flags:\n' \
+                                                 '\t-train\n' \
+                                                 '\t-classify\n' \
+                                                 '\t-reset\n')
+    #-train and all its optional flags
+    parser.add_argument('-train', '-t', nargs='+', 
+                        help = 'train %(prog)s to learn from politicians tweets. e.g. -train POTUS VP')
+    parser.add_argument('--trainpartition', '-tp', nargs='?', default='.8', type=float,
                         help = 'portion of tweets allocated for training. rest is for testing')
     parser.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='<osb unique microgroom>',
                         help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
     parser.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
                         help = 'directory that all program files should go into')
     parser.add_argument('--offline', action='store_true', help = 'use offline saved tweets')
+    parser.add_argument('--resetcorpus', action='store_true', help = 'delete all trained corpuses')
+    parser.add_argument('--resettweets', action='store_true', help = 'delete all saved offline tweets')
+    parser.add_argument('--resetall', action='store_true', help = 'delete all trained corpuses and offline tweets')
+    parser.add_argument('--eval', action='store_true', 
+            help = 'evalute effectiveness of algorithm by separating tweets into training/test sets and printing model evaluation statistics')
+    
+    #-reset
+    parser.add_argument('-reset', '-r', action='store_true', help = 'delete all corpuses, tweets, crm files')
+
+    #-classify - UNDER CONSTRUCTION
+    #parser.add_argument('-classify', '-c', nargs=
+
+
     args = parser.parse_args()
 
     #global vars
     train_partition = args.trainpartition
-    screen_names = args.screen_names
+    screen_names = args.train #screen names for training
     __directory__ = args.directory
 
     #check that trainpartion is between 0 and 1
     if (not 0.0 <= train_partition <= 1.0):
         sys.exit('--trainpartition must be between 0.0 and 1.0')
 
-    reset_corpus()
-    create_crm_files(args.screen_names, args.algorithm)
+    if (args.resetcorpus):
+       reset_corpus()
+
+    if (crm_files_exist(screen_names)):
+        create_crm_files(screen_names, args.algorithm)
 
     #grab all tweets
     all_tweets = grab_tweets(screen_names, args.offline) #set to False if want to download fresh tweets
@@ -77,6 +99,7 @@ def main(argv):
         train(screen_name, someones_tweets)
     print 'trained classifier.'
 
+    
     #Testing (UNDER CONSTRUCTION)
     print 'evaluating algorithm...'
     y_true = []
@@ -87,22 +110,39 @@ def main(argv):
             matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor + '.txt'))
 
             #TO-DO: SOMEHOW EVALUTE PROBLIST
+            print probList
 
             y_true.append(trueAuthor)
             y_pred.append(matchList[0])
-    print y_true, y_pred
+    #Compute Accuracy Score
+    print 'Accuracy score (normalized):', accuracy_score(y_true, y_pred)
+    #Confusion Matrix
     cm = confusion_matrix(y_true, y_pred, labels=screen_names)
     print cm
     plt.figure()
     plot_confusion_matrix(cm, screen_names)
-    plot.show()
+    plt.show()
+    #Classification report
+    print(classification_report(y_true, y_pred, target_names=screen_names))
 
 
     #classify and split probabilities into list
     #bestMatch, probList = classify('speeches/clinton_NYVictorySpeech_apr202016.txt') #retrieve string output
     clean_workspace()
-def create_crm_files(screen_names, classification_type):
 
+def crm_files_exist(screen_names):
+    #check if files exit already
+    allFilesExist = True
+    for name in screen_names:
+        complete_directory = os.path.join(__directory__, name + '.css')
+        if(os.path.isfile(complete_directory) is False):
+            allFilesExist = False
+            break
+    return allFilesExist
+
+
+def create_crm_files(screen_names, classification_type):
+    CLASSIFY_EXT = '.css'    #create files if they don't exist
     LEARN_CMD = "{ learn %s (:*:_arg2:) }"
     CLASSIFY_CMD = "{ isolate (:stats:);" \
             " classify %s ( %s ) (:stats:);" \
@@ -111,7 +151,6 @@ def create_crm_files(screen_names, classification_type):
             " %s " \
             " match [:best:] (:: :best_match:) /([[:graph:]]+).css/;" \
             " output /:*:best_match: :*:prob: \\n %s\\n / }" # %output_list
-    CLASSIFY_EXT = '.css'
     MATCH_VAR = 'match [:stats:] (:: :%s_prob:)' \
                 ' /\\(%s\\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/;'
     #create learn.crm
