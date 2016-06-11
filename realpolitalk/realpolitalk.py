@@ -148,15 +148,17 @@ def train_command(args):
         #Confusion Matrix
         cm = confusion_matrix(y_true, y_pred, labels=screen_names)
         print >>args.eval, 'Confusion matrix:\n', cm
-        #plt.figure()
-        #plot_confusion_matrix(cm, screen_names)
-        #plt.show()
-
-        #Classification report
+                #Classification report
         print >>args.eval, classification_report(y_true, y_pred, target_names=screen_names)
 
         args.eval.close()
-    clean_workspace()
+
+        #show confusion matrix
+        plt.figure()
+        plot_confusion_matrix(cm, screen_names)
+        plt.show()
+
+    clean_workspace(screen_names)
 
 def classify_command(args):
     for files in args.textfiles:
@@ -276,9 +278,9 @@ def classify(textFileName):
     return (bestMatch, tuple(probList))
 
 
-def clean_workspace():
-    subprocess.call('rm -f *.txt', shell=True)
-
+def clean_workspace(screen_names):
+    for name in screen_names:
+        subprocess.call('rm -f ' + os.path.join(__directory__, str(name)+ '.txt', shell=True))
 
 """TWITTER RELATED FUNCTIONS"""
 

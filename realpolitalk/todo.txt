@@ -3,3 +3,4 @@ To-Do
 -Self improvement (if y_pred differs from y_true, then enter the corrected tweets as new training data)
 -Ability to train already created corpuses on new textfiles (e.g. python realpolitalk.py train --corpus HillaryClinton.css Goldman_Sachs_Transcript.txt DNC_2016_Convention_Speech.txt ..)
 -Visualize the probabilities of classifications over time (d3.js integration?)
+-Cross subsampling and precision-recall curve generation

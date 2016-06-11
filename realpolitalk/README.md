@@ -1,16 +1,24 @@
-# realpolitalk: a machine learning approach to understanding tweets
+# realpolitalk: a machine learning tweet-based approach to understanding human speech 
 realpolitalk takes tweets from Twitter users and machine learns them. 
 
-The vision behind the project is to be able to take someone's tweets, learn what makes their tweets unique to them, and be able to identify (proper term would be classify) their speech patterns in any medium, whether an essay, book, speech, etc.
+The vision behind the project is to be able to take someone's tweets, learn how they write/talk from them, and be able to classify their speech patterns in any medium, whether an essay, book, speech, etc.
 
-##Requirements with installation instructions:
+##Requirements:
 - Python 2.7 
 - CRM-114 (installation instructions below)
+
 ###Debian/Ubuntu
+
 `sudo apt-get install crm114`
+
+
 ###Red Hat/Fedora
+
 `sudo dnf install crm114`
+
+
 ###Everyone Else
+
 `## If you do not yet have libtre and its headers:
 curl -O http://crm114.sourceforge.net/tarballs/tre-0.7.5.tar.gz
 tar -zxf tre-*.tar.gz
@@ -26,23 +34,33 @@ cd crm114*.src
 make
 sudo make install
 cd ..`
+
+
 - Twitter API access (consumer key, consumer secret, access tokens)
 [excellent tutorial here on accessing Twitter API](http://pythoncentral.io/introduction-to-tweepy-twitter-for-python/)
+
 - Other requirements (tweepy, numpy, scikit-learn, matplotlib, etc.) can be installed with this command.
+
 `pip install -r requirements.txt`
 
 ##Usage:
 The basic usage pipeline for realpolitalk is to _train_ then _classify_ (and _reset_) as needed.
+
 `python realpolitalk.py {train, classify, reset}`
+
 ###Training
 The most basic usage is to enter the 'train' command and then enter any number of screen names that you want to train the algorithm on.
+
 `python realpolitalk.py train HillaryClinton realDonaldTrump BernieSanders PRyan`
+
 ###Classifying 
 After training realpolitalk on tweets, you can enter the 'classify' command and enter any number of textfiles you want classified. 
 
 The result is a best match (whose speech pattern the textfile most resembles) and the distribution of probabilities for the other choices.
+
 `python realpolitalk.py classify clinton_NYVictorySpeech_apr202016.txt trump_iowafreedomsummit_jan242016.txt.txt ...`
-####Example output (of the above command)a
+####Example output (of the above command)
+
 `best match: HillaryClinton
 probabilities:
 	HillaryClinton:: 1.0
@@ -60,8 +78,32 @@ probabilities:
 If you want to start fresh, maybe train with different users, you can use the 'reset' command to delete all your trained corpuses (the already trained algorithm in .css file format) and tweets.
 `python realpolitalk.py reset --all`
 
-##Advanced Usage
-###Training options
+##Advanced Usage (under construction)
+###Training options 
+
+The most important flag is the '--eval' flag, which generates a number of statistics (confusion matrix, precision recall, the raw probabilities) and either prints them to stdout or to a file. Usage is as follows:
+
+`python realpolitalk.py train HillaryClinton realDonaldTrump --eval #no arguments to print to stdout
+
+python realpolitalk.py train HillaryClinton realDonaldTrump --eval statistics.txt #file to write stats to`
+
+Full options:
+
+`python realpolitalk.py train -h`
+
+
+####CRM 114 algorithms
+By default, realpolitalk uses an OSB classifier. The classifier type can be changed via the '-a' flag.
+
+Example usage is as follows:
+
+`python realpolitalk.py train HillaryClinton realDonaldTrump -a '<osb unique microgroom>'`
+
+The full list of CRM114 classifiers can be found [here](http://i.imgur.com/okAhS8l.png).
+
+
+
+
 
 
 ##Misc.
@@ -73,3 +115,4 @@ Originally used for spam classification, CRM114 is super fast (written in C) and
 
 ###Origin of name
 Realpolitalk was originally designed to only analyze the tweets of politicians hence the [reference in the name](https://en.wikipedia.org/wiki/Realpolitik).
+
