@@ -82,15 +82,17 @@ If you want to start fresh, maybe train with different users, you can use the 'r
 ##Advanced Usage (under construction)
 ###Training options 
 
-The most important flag is the '--eval' flag, which generates a number of statistics (confusion matrix, precision recall) and either prints them to stdout or to a file 
+The most important flag is the **'--eval'** flag, which generates a number of statistics (confusion matrix, precision recall) and either prints them to stdout or to a file 
 
 Usage is as follows:
 
-`python realpolitalk.py train HillaryClinton realDonaldTrump --eval #no arguments to print to stdout
+```
+python realpolitalk.py train HillaryClinton realDonaldTrump --eval #no arguments to print to stdout
 
-python realpolitalk.py train HillaryClinton realDonaldTrump --eval statistics.txt #file to write stats to`
+python realpolitalk.py train HillaryClinton realDonaldTrump --eval statistics.txt #file to write stats to
+```
 
-**Full options:**
+__All options:__
 `python realpolitalk.py train -h`
 
 (note: best match/probability distribution will always be put in 'prob_distribution.txt' on each run). 
