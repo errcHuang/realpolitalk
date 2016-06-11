@@ -17,7 +17,8 @@ The vision behind the project is to be able to take someone's tweets, learn how 
 
 ###Everyone Else
 
-```## If you do not yet have libtre and its headers:
+```
+## If you do not yet have libtre and its headers:
 curl -O http://crm114.sourceforge.net/tarballs/tre-0.7.5.tar.gz
 tar -zxf tre-*.tar.gz
 cd tre-*
@@ -57,19 +58,20 @@ The result is a best match (whose speech pattern the textfile most resembles) an
 `python realpolitalk.py classify goldmansachs_transcript.txt make_america_great_again.txt ...`
 ####Example output (of the above command)
 
-```best match: HillaryClinton
+```
+best match: HillaryClinton
 probabilities:
-	HillaryClinton:: 1.0
-	realDonaldTrump:: 5.81e-31
-	BernieSanders:: 1.44e-22
-	PRyan:: 1.64e-56
+  HillaryClinton:: 1.0
+  realDonaldTrump:: 5.81e-31
+  BernieSanders:: 1.44e-22
+  PRyan:: 1.64e-56
 
 best match: realDonaldTrump
 probabilities:
-	HillaryClinton:: 1.47e-36
-	realDonaldTrump:: 1.0
-	BernieSanders:: 2.94e-12
-	PRyan:: 1.7e-86
+  HillaryClinton:: 1.47e-36
+  realDonaldTrump:: 1.0
+  BernieSanders:: 2.94e-12
+  PRyan:: 1.7e-86
 ```
 
 ###Reseting
