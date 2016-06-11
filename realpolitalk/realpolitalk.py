@@ -121,36 +121,39 @@ def train_command(args):
         #Testing (UNDER CONSTRUCTION)
         print 'evaluating algorithm...'
 
-        #statistics_file = open(os.path.join(__directory__, 
+        temp_stats_file = open(os.path.join(__directory__, 'prob_distribution.txt'), 'w')
 
         y_true = []
         y_pred = []
-        print >>args.eval,'------ BEST MATCH AND PROBABILITIES ------'
+        print >>temp_stats_file,'------ BEST MATCH AND PROBABILITIES ------'
         for tweets in test_tweets:
             for t in tweets:
                 trueAuthor = t.author.screen_name
                 matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor + '.txt'))
 
                 #Write best match and probabilities either to std.out or to file
-                print >>args.eval, 'best match: ' + matchList[0]
-                print >>args.eval, 'probabilities:'
+                print >>temp_stats_file, 'best match: ' + matchList[0]
+                print >>temp_stats_file, 'probabilities:'
                 for tup in probList:
-                    print >>args.eval, '\t' + str(tup[0]) + ': ' + str(tup[1])
-                print >>args.eval, ''
+                    print >>temp_stats_file, '\t' + str(tup[0]) + ': ' + str(tup[1])
+                print >>temp_stats_file, ''
 
                 y_true.append(trueAuthor)
                 y_pred.append(matchList[0])
-        print >>args.eval,'\n'
+        temp_stats_file.close()
 
         print >>args.eval,'------ EVALUATION STATS ------'
         #Compute Accuracy Score
         print >>args.eval, 'Accuracy score (normalized):', accuracy_score(y_true, y_pred)
+        print >>args.eval
+        
         #Confusion Matrix
         cm = confusion_matrix(y_true, y_pred, labels=screen_names)
         print >>args.eval, 'Confusion matrix:\n', cm
-                #Classification report
-        print >>args.eval, classification_report(y_true, y_pred, target_names=screen_names)
+        print >>args.eval
 
+        #Classification report
+        print >>args.eval, classification_report(y_true, y_pred, target_names=screen_names)
         args.eval.close()
 
         #show confusion matrix
@@ -280,7 +283,7 @@ def classify(textFileName):
 
 def clean_workspace(screen_names):
     for name in screen_names:
-        subprocess.call('rm -f ' + os.path.join(__directory__, str(name)+ '.txt', shell=True))
+        subprocess.call('rm -f ' + os.path.join(__directory__, str(name)+ '.txt'), shell=True)
 
 """TWITTER RELATED FUNCTIONS"""
 
