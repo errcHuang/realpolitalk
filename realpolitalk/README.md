@@ -103,7 +103,7 @@ By default, realpolitalk uses an OSB classifier. The classifier type can be chan
 
 Example usage is as follows:
 
-`python realpolitalk.py train HillaryClinton realDonaldTrump -a '<osb unique microgroom>'`
+`python realpolitalk.py train HillaryClinton realDonaldTrump -a '<osb unique microgroom>' --eval`
 
 The full list of CRM114 classifiers can be found [here](http://i.imgur.com/okAhS8l.png).
 
