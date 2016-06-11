@@ -11,15 +11,13 @@ The vision behind the project is to be able to take someone's tweets, learn how 
 
 `sudo apt-get install crm114`
 
-
 ###Red Hat/Fedora
 
 `sudo dnf install crm114`
 
-
 ###Everyone Else
 
-`## If you do not yet have libtre and its headers:
+````## If you do not yet have libtre and its headers:
 curl -O http://crm114.sourceforge.net/tarballs/tre-0.7.5.tar.gz
 tar -zxf tre-*.tar.gz
 cd tre-*
@@ -33,12 +31,10 @@ tar -zxf crm114-*.tar.gz
 cd crm114*.src
 make
 sudo make install
-cd ..`
+cd ..
+```
 
-
-- Twitter API access (consumer key, consumer secret, access tokens)
-[excellent tutorial here on accessing Twitter API](http://pythoncentral.io/introduction-to-tweepy-twitter-for-python/)
-
+- Twitter API access (consumer key, consumer secret, access token, [excellent tutorial here on accessing Twitter API](http://pythoncentral.io/introduction-to-tweepy-twitter-for-python/)
 - Other requirements (tweepy, numpy, scikit-learn, matplotlib, etc.) can be installed with this command.
 
 `pip install -r requirements.txt`
@@ -58,10 +54,11 @@ After training realpolitalk on tweets, you can enter the 'classify' command and 
 
 The result is a best match (whose speech pattern the textfile most resembles) and the distribution of probabilities for the other choices.
 
-`python realpolitalk.py classify clinton_NYVictorySpeech_apr202016.txt trump_iowafreedomsummit_jan242016.txt.txt ...`
+`python realpolitalk.py classify goldmansachs_transcript.txt make_america_great_again.txt ...`
 ####Example output (of the above command)
 
-`best match: HillaryClinton
+```
+best match: HillaryClinton
 probabilities:
 	HillaryClinton:: 1.0
 	realDonaldTrump:: 5.81e-31
@@ -73,23 +70,29 @@ probabilities:
 	HillaryClinton:: 1.47e-36
 	realDonaldTrump:: 1.0
 	BernieSanders:: 2.94e-12
-	PRyan:: 1.7e-86`
+	PRyan:: 1.7e-86
+```
+
 ###Reseting
 If you want to start fresh, maybe train with different users, you can use the 'reset' command to delete all your trained corpuses (the already trained algorithm in .css file format) and tweets.
+
 `python realpolitalk.py reset --all`
 
 ##Advanced Usage (under construction)
 ###Training options 
 
-The most important flag is the '--eval' flag, which generates a number of statistics (confusion matrix, precision recall) and either prints them to stdout or to a file (note: best match/probability distribution will always be put in 'prob_distribution.txt' on each run). Usage is as follows:
+The most important flag is the '--eval' flag, which generates a number of statistics (confusion matrix, precision recall) and either prints them to stdout or to a file 
+
+Usage is as follows:
 
 `python realpolitalk.py train HillaryClinton realDonaldTrump --eval #no arguments to print to stdout
 
 python realpolitalk.py train HillaryClinton realDonaldTrump --eval statistics.txt #file to write stats to`
 
-Full options:
-
+**Full options:**
 `python realpolitalk.py train -h`
+
+(note: best match/probability distribution will always be put in 'prob_distribution.txt' on each run). 
 
 
 ####CRM 114 algorithms
