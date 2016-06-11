@@ -54,6 +54,7 @@ def main(argv):
          help = 'commands to delete saved files (corpus, tweets, crm).')
     parser_reset.add_argument('--corpus', action='store_true', help = 'deletes all trained corpuses')
     parser_reset.add_argument('--tweets', action='store_true', help = 'deletes all saved offline tweets')
+    parser_reset.add_argument('--crm', action='store_true', help = 'remove .crm files')
     parser_reset.add_argument('--all', action='store_true', help = 'deletes corpuses, tweets, and crm files')
     parser_reset.set_defaults(func = reset_command)
 
@@ -184,6 +185,9 @@ def reset_command(args):
     if (args.tweets is True or args.all is True):
         subprocess.call('rm -f *.tweets', shell=True)
 
+    if (args.crm is True):
+        subprocess.call('rm -f *.crm', shell=True)
+
     if (args.all is True):
         subprocess.call('rm *.crm', shell=True)
 
@@ -210,7 +214,7 @@ def create_crm_files(screen_names, classification_type):
             " match [:best:] (:: :best_match:) /([[:graph:]]+).css/;" \
             " output /:*:best_match: :*:prob: \\n %s\\n / }" # %output_list
     MATCH_VAR = 'match [:stats:] (:: :%s_prob:)' \
-                ' /\\(%s\\): features: [[:graph:]]+ hits: [[:graph:]]+ prob: ([[:graph:]]+),/;'
+            ' /\\(%s\\): [[:graph:]]+: [[:graph:]]+, [[:graph:]]: [[:graph:]]+, prob: ([[:graph:]]+),/;'
     #create learn.crm
     learnCRM = open(os.path.join(__directory__,'learn.crm'), 'w')
     learnCRM.write(LEARN_CMD % classification_type)

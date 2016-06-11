@@ -1,0 +1,16 @@
+------ EVALUATION STATS ------
+Accuracy score (normalized): 0.734358974359
+
+Confusion matrix:
+[[470  28   4]
+ [ 86 195  28]
+ [ 71  42  51]]
+
+             precision    recall  f1-score   support
+
+GovChristie       0.75      0.94      0.83       502
+ MittRomney       0.74      0.63      0.68       309
+      PRyan       0.61      0.31      0.41       164
+
+avg / total       0.72      0.73      0.71       975
+
