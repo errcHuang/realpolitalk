@@ -27,7 +27,7 @@ __directory__ = '' #placeholder for directory
 def main(argv):
     #Create top level parser
     parser = argparse.ArgumentParser(
-            description='Machine learning classifier that learns people\'s speech patterns via their tweets.', 
+            description='Machine learning classifier that learns people\'s speech patterns via their tweets.',
             prog='PROG')
     subparsers = parser.add_subparsers(help='Use one of the following three commands:\n' \
                                             '\ttrain --help\n' \
@@ -36,7 +36,7 @@ def main(argv):
 
     #create parser for 'train' command
     parser_train = subparsers.add_parser('train', help='given twitter handles, train the classifier')
-    parser_train.add_argument('screen_names', nargs='+', 
+    parser_train.add_argument('screen_names', nargs='+',
                         help = 'twitter handles for those whose tweets you want to use to train the classifier')
     parser_train.add_argument('--trainpartition', '-tp', nargs='?', default='.8', type=float,
                         help = 'portion of tweets allocated for training. rest is for testing')
@@ -45,12 +45,12 @@ def main(argv):
     parser_train.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
                         help = 'directory that all program files should go into')
     parser_train.add_argument('--offline', action='store_true', help = 'use offline saved tweets')
-    parser_train.add_argument('--eval', nargs='?', type=argparse.FileType('w'), const = sys.stdout, 
+    parser_train.add_argument('--eval', nargs='?', type=argparse.FileType('w'), const = sys.stdout,
             help = 'evalute effectiveness of algorithm by separating tweets into training/test sets and printing model evaluation statistics')
     parser_train.set_defaults(func=train_command)
-    
+
     #create parser for 'reset' command
-    parser_reset = subparsers.add_parser('reset', 
+    parser_reset = subparsers.add_parser('reset',
          help = 'commands to delete saved files (corpus, tweets, crm).')
     parser_reset.add_argument('--corpus', action='store_true', help = 'deletes all trained corpuses')
     parser_reset.add_argument('--tweets', action='store_true', help = 'deletes all saved offline tweets')
@@ -62,7 +62,7 @@ def main(argv):
     parser_classify = subparsers.add_parser('classify', help='classify textfile(s) based on trained corpuses')
     parser_classify.add_argument('textfiles', nargs='+', type=str, help='textfiles for classifying. E.g. test.txt')
     parser_classify.set_defaults(func = classify_command)
-    
+
     #parse the args and call whichever function was selected (func=...)
     args = parser.parse_args()
     args.func(args)
@@ -71,7 +71,7 @@ def train_command(args):
     #global vars
     screen_names = args.screen_names #screen names for training
     all_tweets = []
-    
+
     try:
         all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
     except tweepy.TweepError as e:
@@ -91,7 +91,7 @@ def train_command(args):
     train_partition = args.trainpartition
     if (not 0.0 <= train_partition <= 1.0):
         sys.exit('--trainpartition must be between 0.0 and 1.0')
-    
+
     #--algorithm
     create_crm_files(screen_names, args.algorithm)
 
@@ -147,7 +147,7 @@ def train_command(args):
         #Compute Accuracy Score
         print >>args.eval, 'Accuracy score (normalized):', accuracy_score(y_true, y_pred)
         print >>args.eval
-        
+
         #Confusion Matrix
         cm = confusion_matrix(y_true, y_pred, labels=screen_names)
         print >>args.eval, 'Confusion matrix:\n', cm
@@ -171,7 +171,7 @@ def classify_command(args):
         print 'probabilities:'
         for tup in probList:
             print '\t' + str(tup[0]) + ': ' + str(tup[1])
-        print 
+        print
 
     #clean_workspace()
 
@@ -214,7 +214,7 @@ def create_crm_files(screen_names, classification_type):
             " match [:best:] (:: :best_match:) /([[:graph:]]+).css/;" \
             " output /:*:best_match: :*:prob: \\n %s\\n / }" # %output_list
     MATCH_VAR = 'match [:stats:] (:: :%s_prob:)' \
-            ' /\\(%s\\): [[:graph:]]+: [[:graph:]]+, [[:graph:]]: [[:graph:]]+, prob: ([[:graph:]]+),/;'
+            ' /\\(%s\\): [[:alpha:]]+: [[:graph:]]+, [[:alpha:]]+: [[:graph:]]+, [[:alpha:]]+: ([[:graph:]]+),/ ;'
     #create learn.crm
     learnCRM = open(os.path.join(__directory__,'learn.crm'), 'w')
     learnCRM.write(LEARN_CMD % classification_type)
@@ -265,7 +265,7 @@ def get_training_and_test_set(trainProportion, dataset):
 #note tweets must not be empty
 def train(screen_name, tweets):
     trainingTxtFile = write_tweets_to_file(tweets,__directory__, screen_name + '.txt')
-    subprocess.call('crm ' + os.path.join(__directory__, 'learn.crm') + 
+    subprocess.call('crm ' + os.path.join(__directory__, 'learn.crm') +
             ' ' + (screen_name+'.css') + ' < '+ trainingTxtFile, shell=True)
 
 # classifies textfile and returns best match and probabilities
@@ -356,8 +356,8 @@ def get_all_tweets(screen_name, include_retweets = True):
 
     if (include_retweets is False): #filter out retweets
         print 'parsing out retweets...'
-        alltweets = [t for t in alltweets if (t.text.startswith('RT') is False) 
-                    and t.text.startswith('"') is False] 
+        alltweets = [t for t in alltweets if (t.text.startswith('RT') is False)
+                    and t.text.startswith('"') is False]
     return alltweets
 
 #saves tweets to text file under firstnamelastname.txt by default
