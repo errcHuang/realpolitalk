@@ -74,7 +74,7 @@ probabilities:
   PRyan:: 1.7e-86
 ```
 
-###Reseting
+###Resetting
 If you want to start fresh, maybe train with different users, you can use the 'reset' command to delete all your trained corpuses (the already trained algorithm in .css file format) and tweets.
 
 `python realpolitalk.py reset --all`
