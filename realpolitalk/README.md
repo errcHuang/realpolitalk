@@ -46,16 +46,16 @@ The basic usage pipeline for realpolitalk is to _train_ then _classify_ (and _re
 `python realpolitalk.py {train, classify, reset}`
 
 ###Training
-The most basic usage is to enter the 'train' command and then enter any number of screen names that you want to train the algorithm on.
+The most basic usage is to enter the 'train' command and then enter _any_ number of screen names that you want to train the algorithm on.
 
 `python realpolitalk.py train HillaryClinton realDonaldTrump BernieSanders PRyan`
 
 ###Classifying 
-After training realpolitalk on tweets, you can enter the 'classify' command and enter any number of textfiles you want classified. 
+After training realpolitalk on tweets, you can enter the 'classify' command and enter _any_ number of textfiles you want classified. 
 
 The result is a best match (whose speech pattern the textfile most resembles) and the distribution of probabilities for the other choices.
 
-`python realpolitalk.py classify goldmansachs_transcript.txt make_america_great_again.txt ...`
+`python realpolitalk.py classify goldmansachs_transcript.txt make_america_great_again.txt`
 ####Example output (of the above command)
 
 ```
