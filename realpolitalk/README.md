@@ -100,7 +100,7 @@ By default, realpolitalk uses an OSB classifier (osb unique microgroom). The cla
 Example usage is as follows:
 ```python
 #use Entropy-type classifier instead of OSB, and print evaluation stats to stdout
-python realpolitalk.py train HillaryClinton realDonaldTrump -a '<entropy unique crosslink>' --eval
+python realpolitalk.py train HillaryClinton realDonaldTrump -a 'entropy unique crosslink' --eval
 ```
 
 The full list of CRM114 classifiers can be found [here](http://i.imgur.com/okAhS8l.png).

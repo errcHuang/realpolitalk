@@ -40,7 +40,7 @@ def main(argv):
                         help = 'twitter handles for those whose tweets you want to use to train the classifier')
     parser_train.add_argument('--trainpartition', '-tp', nargs='?', default='.8', type=float,
                         help = 'portion of tweets allocated for training. rest is for testing')
-    parser_train.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='<osb unique microgroom>',
+    parser_train.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='osb unique microgroom',
                         help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
     parser_train.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
                         help = 'directory that all program files should go into')
@@ -206,10 +206,12 @@ def crm_files_exist(screen_names):
 
 
 def create_crm_files(screen_names, classification_type):
+    #classification_type = classification_type.rstrip('>').strip('<')
     CLASSIFY_EXT = '.css'    #create files if they don't exist
-    LEARN_CMD = "{ learn %s (:*:_arg2:) }"
+    UNLEARN_CMD = "{ learn <%s refute> (:*:_arg2:) }"
+    LEARN_CMD = "{ learn <%s> (:*:_arg2:) }"
     CLASSIFY_CMD = "{ isolate (:stats:);" \
-            " classify %s ( %s ) (:stats:);" \
+            " classify <%s> ( %s ) (:stats:);" \
             " match [:stats:] (:: :best: :prob:)" \
             " /Best match to file #. \\(([[:graph:]]+)\\) prob: ([0-9\\.]+) /;" \
             " %s " \
@@ -223,6 +225,11 @@ def create_crm_files(screen_names, classification_type):
     learnCRM = open(os.path.join(__directory__,'learn.crm'), 'w')
     learnCRM.write(LEARN_CMD % classification_type)
     learnCRM.close()
+
+    #create unlearn.crm
+    unlearnCRM = open(os.path.join(__directory__, 'unlearn.crm'), 'w')
+    unlearnCRM.write(UNLEARN_CMD % classification_type)
+    unlearnCRM.close()
 
     #create classify.crm
     classifyCRM = open('classify.crm', 'w')
