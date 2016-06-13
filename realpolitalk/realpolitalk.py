@@ -117,11 +117,6 @@ def train_command(args):
         train(screen_name, someones_tweets)
     print 'trained classifier.'
 
-    bestMatch, probList = classify('speeches/clinton.txt')
-    print bestMatch
-    print probList
-    sys.exit()
-
     #if --eval flag is used, then classify test set and print statistics
     if (args.eval is not None):
         #Testing (UNDER CONSTRUCTION)
@@ -191,11 +186,12 @@ def reset_command(args):
     if (args.tweets is True or args.all is True):
         subprocess.call('rm -f *.tweets', shell=True)
 
-    if (args.crm is True):
+    if (args.crm is True or args.all is True):
         subprocess.call('rm -f *.crm', shell=True)
 
     if (args.all is True):
-        subprocess.call('rm *.crm', shell=True)
+        subprocess.call('rm prob_distribution.txt', shell=True)
+
 
 
 def crm_files_exist(screen_names):
@@ -222,7 +218,7 @@ def create_crm_files(screen_names, classification_type):
     MATCH_VAR = 'match [:stats:] (:: :%s_temp:)' \
                     ' /\\(%s\\): (.*?)\\\\n/;' \
                 ' match [:%s_temp:] (:: :%s_prob: :%s_pr:)' \
-                ' /prob: ([[:graph:]]+), pR:  ([[:graph:]]+)/;'
+                ' /prob: ([[:graph:]]+), pR:[[:space:]]+([[:graph:]]+)/;'
     #create learn.crm
     learnCRM = open(os.path.join(__directory__,'learn.crm'), 'w')
     learnCRM.write(LEARN_CMD % classification_type)
@@ -281,7 +277,6 @@ def train(screen_name, tweets):
 # probList = [ (twitterHandle1, probability1) (twitterHandle2, probability2) ...]
 def classify(textFileName):
     output =  subprocess.check_output('crm ' + os.path.join(__directory__, 'classify.crm') + ' < ' + textFileName, shell=True) #string output from crm114
-    print output
     outList = output.split()
     bestMatch = (str(outList[0]), float(outList[1])) #(best_match, probability)
     outList = outList[2:]
