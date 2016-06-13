@@ -79,8 +79,8 @@ If you want to start fresh, maybe train with different users, you can use the 'r
 
 `python realpolitalk.py reset --all`
 
-##Advanced Usage (under construction)
-###Training options 
+##Advanced Usage
+###Evaluation statistics generation 
 
 The most important flag is the **'--eval'** flag, which generates a number of statistics (confusion matrix, precision recall) and either prints them to stdout or to a file 
 
@@ -92,26 +92,27 @@ python realpolitalk.py train HillaryClinton realDonaldTrump --eval #no arguments
 python realpolitalk.py train HillaryClinton realDonaldTrump --eval statistics.txt #file_to_write_stats_to.txt
 ```
 
-__All options:__
-`python realpolitalk.py train -h`
-
 (note: best match/probability distribution will always be put in 'prob_distribution.txt' on each run). 
-
 
 ###Changing algorithm options
 By default, realpolitalk uses an OSB classifier (osb unique microgroom). The classifier type can be changed via the '-a' flag.
 
 Example usage is as follows:
 ```python
-#use Entropy-type classifier instead of OSB, and print evaluation stats to std out
-python realpolitalk.py train HillaryClinton realDonaldTrump -a '<entropy unique crosslink>' --eval`
+#use Entropy-type classifier instead of OSB, and print evaluation stats tostd out
+python realpolitalk.py train HillaryClinton realDonaldTrump -a '<entropy unique crosslink>' --eval
 ```
 
 The full list of CRM114 classifiers can be found [here](http://i.imgur.com/okAhS8l.png).
 
 
-
-
+###Other options
+A complete list of options can be found via:
+```python
+python realpolitalk.py train -h
+python realpolitalk.py classify -h
+python realpolitalk.py reset -h
+```
 
 
 ##Misc.
