@@ -125,7 +125,9 @@ def train_command(args):
     #train classifier
     for someones_tweets in training_tweets:
         screen_name = str(someones_tweets[0].author.screen_name)
-        train(write_tweets_to_file(someones_tweets,__directory__, screen_name + '.txt'), screen_name)
+        someones_tweets_file = write_tweets_to_file(someones_tweets, __directory__, screen_name + '.txt')
+        bestMatch, probList = classify(someones_tweets_file)
+        smart_train(bestMatch, probList, screen_name, trainmethod, someones_tweets_file) 
     print 'trained classifier.'
 
     #if --eval flag is used, then classify test set and print statistics
@@ -143,8 +145,6 @@ def train_command(args):
                 trueAuthor = t.author.screen_name
                 tweetFileName = write_tweets_to_file([t], __directory__, trueAuthor + '.txt')
                 bestMatch, probList = classify(tweetFileName)
-
-                bestMatch, probList = re_train(bestMatch, probList, trueAuthor, trainmethod, tweetFileName) 
 
                 #Write best match and probabilities either to std.out or to file
                 print >>temp_stats_file, 'best match: ' + bestMatch[0]
@@ -295,7 +295,7 @@ def untrain(trainingTxtFile, corpus_name):
 
 #match: (name_of_match, prob_of_match, pr_of_match)
 #train_method: (name_of_method, pR_threshold)
-def re_train(match, probList, truth_match_name, train_method, textfilename):
+def smart_train(match, probList, truth_match_name, train_method, textfilename):
     prThreshold = train_method[1]
     name_of_match = match[0]
     pr = match[2]
@@ -358,9 +358,10 @@ def re_train(match, probList, truth_match_name, train_method, textfilename):
                 newPR = bestMatch[2]
     elif train_method[0] == 'TUNE':
         print 'nice meme son'
+    else: #by default train everything (TET)
+        train(textfilename, truth_match_name)
 
-    bestMatch, probList = classify(textfilename)
-    return (bestMatch, probList)
+
 
 # classifies textfile and returns best match and probabilities
 # bestMatch = tuple(bestMatch bestProb, bestPR)
