@@ -1,0 +1,5 @@
+{
+    isolate (:stats:)
+    classify <winnow unique microgroom> (A B C) (:stats:)
+    output /:*:stats:/
+}

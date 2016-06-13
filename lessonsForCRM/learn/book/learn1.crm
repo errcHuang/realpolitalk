@@ -1,8 +1,0 @@
-#{
-#    isolate (:stats:)
-#    classify <osb unique microgroom> (A B C) (:stats:)
-#    output /:*:stats:/
-#}
-{
-    learn <osb unique microgroom> (:*:_arg2:)
-}
