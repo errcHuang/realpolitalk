@@ -86,10 +86,10 @@ The most important flag is the **'--eval'** flag, which generates a number of st
 
 Usage is as follows:
 
-```
+```python
 python realpolitalk.py train HillaryClinton realDonaldTrump --eval #no arguments to print to stdout
 
-python realpolitalk.py train HillaryClinton realDonaldTrump --eval statistics.txt #file to write stats to
+python realpolitalk.py train HillaryClinton realDonaldTrump --eval statistics.txt #file_to_write_stats_to.txt
 ```
 
 __All options:__
@@ -98,12 +98,14 @@ __All options:__
 (note: best match/probability distribution will always be put in 'prob_distribution.txt' on each run). 
 
 
-####CRM 114 algorithms
-By default, realpolitalk uses an OSB classifier. The classifier type can be changed via the '-a' flag.
+###Changing algorithm options
+By default, realpolitalk uses an OSB classifier (osb unique microgroom). The classifier type can be changed via the '-a' flag.
 
 Example usage is as follows:
-
-`python realpolitalk.py train HillaryClinton realDonaldTrump -a '<osb unique microgroom>' --eval`
+```python
+#use Entropy-type classifier instead of OSB, and print evaluation stats to std out
+python realpolitalk.py train HillaryClinton realDonaldTrump -a '<entropy unique crosslink>' --eval`
+```
 
 The full list of CRM114 classifiers can be found [here](http://i.imgur.com/okAhS8l.png).
 
