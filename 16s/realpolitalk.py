@@ -8,10 +8,7 @@ import subprocess
 import argparse
 import tweepy
 import random
-try:
-    import cPickle as pickle
-except:
-    import pickle
+import pickle
 
 #authentication stuff for twitter
 __consumer_key__ = 'SDSxLoUOU5eNAQEOkvvEwTFKi'
@@ -31,7 +28,7 @@ def main(argv):
     #Create top level parser
     parser = argparse.ArgumentParser(
             description='Machine learning classifier that learns people\'s speech patterns via their tweets.',
-            prog='realpolitalk.py')
+            prog='PROG')
     subparsers = parser.add_subparsers(help='Use one of the following three commands:\n' \
                                             '\ttrain --help\n' \
                                             '\tclassify --help\n' \
@@ -40,29 +37,25 @@ def main(argv):
     #create parser for 'train' command
     parser_train = subparsers.add_parser('train', help='given twitter handles, train the classifier')
     parser_train.add_argument('screen_names', nargs='+',
-            help = 'twitter handles for those whose tweets you want to use to train the classifier')
+                        help = 'twitter handles for those whose tweets you want to use to train the classifier')
     parser_train.add_argument('--trainpartition', '-tp', nargs='?', default='.8', type=float,
-            help = 'portion of tweets allocated for training. rest is for testing')
+                        help = 'portion of tweets allocated for training. rest is for testing')
     parser_train.add_argument('--algorithm', '-a',  nargs='?', type=str,  default='osb unique microgroom',
-            help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
+                        help = 'type of algorithm for crm114. e.g. \'%(default)s\'')
     parser_train.add_argument('--directory', '-d', nargs='?', type=str, default = os.path.dirname(os.path.abspath(__file__)),
-            help = 'directory that all program files should go into')
-    parser_train.add_argument('--eval', nargs='?', type=argparse.FileType('w'), const = sys.stdout,
-            help = 'evaluate effectiveness of algorithm by separating tweets into training/test sets and printing model evaluation statistics')
-    parser_train.add_argument('--trainmethod', '-tm', nargs='*',  
-            help = 'change method of training (TOE, SSTTT, DSTTT, DSTTTR, TTE, TUNE). only works with the --eval flag')
-    parser_train.set_defaults(func=train_command)
-    #realpolitalk specific
+                        help = 'directory that all program files should go into')
     parser_train.add_argument('--offline', action='store_true', help = 'use offline saved tweets')
+    parser_train.add_argument('--eval', nargs='?', type=argparse.FileType('w'), const = sys.stdout,
+            help = 'evalute effectiveness of algorithm by separating tweets into training/test sets and printing model evaluation statistics')
+    parser_train.set_defaults(func=train_command)
 
     #create parser for 'reset' command
     parser_reset = subparsers.add_parser('reset',
          help = 'commands to delete saved files (corpus, tweets, crm).')
     parser_reset.add_argument('--corpus', action='store_true', help = 'deletes all trained corpuses')
+    parser_reset.add_argument('--tweets', action='store_true', help = 'deletes all saved offline tweets')
     parser_reset.add_argument('--crm', action='store_true', help = 'remove .crm files')
     parser_reset.add_argument('--all', action='store_true', help = 'deletes corpuses, tweets, and crm files')
-    #realpolitalk specific
-    parser_reset.add_argument('--tweets', action='store_true', help = 'deletes all saved offline tweets')
     parser_reset.set_defaults(func = reset_command)
 
     #-classify - UNDER CONSTRUCTION
@@ -78,7 +71,6 @@ def train_command(args):
     #global vars
     screen_names = args.screen_names #screen names for training
     all_tweets = []
-    trainmethod = args.trainmethod
 
     try:
         all_tweets = grab_tweets(screen_names, args.offline) #grab alltweets
@@ -117,19 +109,17 @@ def train_command(args):
         training_tweets, test_tweets = get_training_and_test_set(train_partition, all_tweets)
     else:
         training_tweets = all_tweets
-    #--trainmethod
-    if (args.trainmethod is None):
-        trainmethod = ['N/A', 0]
 
 
     #train classifier
     for someones_tweets in training_tweets:
         screen_name = str(someones_tweets[0].author.screen_name)
-        train(write_tweets_to_file(someones_tweets,__directory__, screen_name + '.txt'), screen_name)
+        train(screen_name, someones_tweets)
     print 'trained classifier.'
 
     #if --eval flag is used, then classify test set and print statistics
     if (args.eval is not None):
+        #Testing (UNDER CONSTRUCTION)
         print 'evaluating algorithm...'
 
 
@@ -141,20 +131,17 @@ def train_command(args):
         for tweets in test_tweets:
             for t in tweets:
                 trueAuthor = t.author.screen_name
-                tweetFileName = write_tweets_to_file([t], __directory__, trueAuthor + '.txt')
-                bestMatch, probList = classify(tweetFileName)
-
-                bestMatch, probList = re_train(bestMatch, probList, trueAuthor, trainmethod, tweetFileName) 
+                matchList, probList = classify(write_tweets_to_file([t], __directory__, trueAuthor + '.txt'))
 
                 #Write best match and probabilities either to std.out or to file
-                print >>temp_stats_file, 'best match: ' + bestMatch[0]
+                print >>temp_stats_file, 'best match: ' + matchList[0]
                 print >>temp_stats_file, 'probabilities:'
                 for tup in probList:
                     print >>temp_stats_file, '\t' + str(tup[0]) + ': ' + str(tup[1])
                 print >>temp_stats_file, ''
 
                 y_true.append(trueAuthor)
-                y_pred.append(bestMatch[0])
+                y_pred.append(matchList[0])
         temp_stats_file.close()
 
         print >>args.eval,'------ EVALUATION STATS ------'
@@ -181,7 +168,7 @@ def train_command(args):
 def classify_command(args):
     for files in args.textfiles:
         bestMatch, probList = classify(str(files))
-        print 'best match: ' + bestMatch
+        print 'best match: ' + bestMatch[0]
         print 'probabilities:'
         for tup in probList:
             print '\t' + str(tup[0]) + ': ' + str(tup[1])
@@ -225,11 +212,11 @@ def create_crm_files(screen_names, classification_type):
     LEARN_CMD = "{ learn <%s> (:*:_arg2:) }"
     CLASSIFY_CMD = "{ isolate (:stats:);" \
             " classify <%s> ( %s ) (:stats:);" \
-            " match [:stats:] (:: :best: :prob: :pr:)" \
-            " /Best match to file #. \\(([[:graph:]]+)\\) [[:graph:]]+: ([0-9\\.]+)[[:space:]]+pR:[[:space:]]+([[:graph:]]+)/;" \
+            " match [:stats:] (:: :best: :prob:)" \
+            " /Best match to file #. \\(([[:graph:]]+)\\) prob: ([0-9\\.]+) /;" \
             " %s " \
             " match [:best:] (:: :best_match:) /([[:graph:]]+).css/;" \
-            " output /:*:best_match: :*:prob: :*:pr: \\n%s\\n/ }" # %output_list
+            " output /:*:best_match: :*:prob: \\n%s\\n/ }" # %output_list
     MATCH_VAR = 'match [:stats:] (:: :%s_temp:)' \
                     ' /\\(%s\\): (.*?)\\\\n/;' \
                 ' match [:%s_temp:] (:: :%s_prob: :%s_pr:)' \
@@ -286,111 +273,29 @@ def get_training_and_test_set(trainProportion, dataset):
         test_data.append(data[trainIndex:]) #partition test set from random index to end
     return (training_data, test_data)
 
-def train(trainingTxtFile, corpus_name):
+#note tweets must not be empty
+def train(screen_name, tweets):
+    trainingTxtFile = write_tweets_to_file(tweets,__directory__, screen_name + '.txt')
     subprocess.call('crm ' + os.path.join(__directory__, 'learn.crm') +
-            ' ' + (corpus_name+'.css') + ' < '+ trainingTxtFile, shell=True)
-def untrain(trainingTxtFile, corpus_name):
-    subprocess.call('crm ' + os.path.join(__directory__, 'unlearn.crm') +
-            ' ' + (corpus_name+'.css') + ' < '+ trainingTxtFile, shell=True)
-
-#match: (name_of_match, prob_of_match, pr_of_match)
-#train_method: (name_of_method, pR_threshold)
-def re_train(match, probList, truth_match_name, train_method, textfilename):
-    prThreshold = train_method[1]
-    name_of_match = match[0]
-    pr = match[2]
-    if train_method[0] == 'TOE':
-        if truth_match_name != name_of_match: #if classifier incorrectly predicts 
-            train(textfilename, truth_match_name)
-    elif train_method[0] == 'SSTTT':
-        if truth_match_name != name_of_match: #if classifier incorrectly predicts 
-            train(textfilename, truth_match_name)
-        elif pr < prThreshold: #if correct, but match PR is less than PR threshold
-            train(textfilename, truth_match_name)
-    elif train_method[0] == 'DSTTT':
-        if truth_match_name != name_of_match: #if classifier incorrectly predicts 
-            train(textfilename, truth_match_name)
-        elif pr < prThreshold: #if correct, but match PR is less than PR threshold
-            train(textfilename, truth_match_name)
-
-            #if not sure if others were incorrect, then untrain out 
-            for tuples in probList:
-                name = tuples[0]
-                if name != truth_match_name:
-                    prWrong = abs(tuples[2])
-                    if prWrong < prThreshold:
-                        untrain(textfilename, name)
-    elif train_method[0] == 'DSTTTR':
-        oldPR = match[2]
-        if truth_match_name != name_of_match: #if classifier incorrectly predicts 
-            train(textfilename, truth_match_name)
-        elif pr < prThreshold: #if correctly matched, but match PR is less than PR threshold
-            train(textfilename, truth_match_name)
-
-            #reclassify text
-            bestMatch, probList = classify(textfilename)
-            newMatchName = bestMatch[0]
-            newPR = bestMatch[2]
-
-            #if improvement not good enough, then untrain out of incorrect classes
-            if (newPR < prThreshold) or abs(newPR-oldPR) > 3:
-                for tuples in probList:
-                    name = tuples[0]
-                    if name != truth_match_name:
-                        untrain(textfilename, name)
-    elif train_method[0] == 'TTE':
-        if truth_match_name != name_of_match: #if classifier incorrectly predicts 
-            train(textfilename, truth_match_name)
-
-            #reclassify text
-            bestMatch, probList = classify(textfilename)
-            newMatchName = bestMatch[0]
-            newPR = bestMatch[2]
-
-            #keep training until pr threshold improves to satisfactory level
-            loopCount = 0
-            while (newPR < prThreshold and loopCount is not 5):
-                train(textfilename, truth_match_name)
-
-                #reclassify text
-                bestMatch, probList = classify(textfilename)
-                newMatchName = bestMatch[0]
-                newPR = bestMatch[2]
-    elif train_method[0] == 'TUNE':
-        print 'nice meme son'
-
-    bestMatch, probList = classify(textfilename)
-    return (bestMatch, probList)
+            ' ' + (screen_name+'.css') + ' < '+ trainingTxtFile, shell=True)
 
 # classifies textfile and returns best match and probabilities
-# bestMatch = tuple(bestMatch bestProb, bestPR)
-# probList = [ (twitterHandle1, probability1, pR1) (twitterHandle2, probability2, pR2) ...]
+# bestMatch = tuple(bestMatch bestProb)
+# probList = [ (twitterHandle1, probability1) (twitterHandle2, probability2) ...]
 def classify(textFileName):
     output =  subprocess.check_output('crm ' + os.path.join(__directory__, 'classify.crm') + ' < ' + textFileName, shell=True) #string output from crm114
     outList = output.split()
-    bestMatch = ( str(outList[0]), float(outList[1]), float(outList[2]) ) #(match, prob, pR)
-    outList = outList[3:]
+    bestMatch = (str(outList[0]), float(outList[1])) #(best_match, probability)
+    outList = outList[2:]
 
     probList = []
     it = iter(outList)
     for x in it:
-        x.rstrip(':')
         probList.append((x, float(next(it)), float(next(it)) ))
 
     #probList: (match, probability, pR)
 
     return (bestMatch, tuple(probList)) 
-
-def plot_confusion_matrix(cm, labels, title='Confusion matrix', cmap=plt.cm.Blues):
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(labels))
-    plt.xticks(tick_marks, labels, rotation=45)
-    plt.yticks(tick_marks, labels)
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
 
 
 def clean_workspace(screen_names):
@@ -477,6 +382,18 @@ def write_tweets_to_file(tweets, directory, nameoffile = 'lmao.txt'):
         writefile.write(t.text.encode('ascii', 'ignore') + '\n')
     writefile.close()
     return nameoffile
+
+def plot_confusion_matrix(cm, labels, title='Confusion matrix', cmap=plt.cm.Blues):
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(labels))
+    plt.xticks(tick_marks, labels, rotation=45)
+    plt.yticks(tick_marks, labels)
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
