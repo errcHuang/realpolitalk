@@ -1,0 +1,6 @@
+CLASSIFY succeeds; success probability: 1.0000  pR: 304.6527
+Best match to file #0 (A) prob: 0.3333  pR: -0.3010  
+Total features in input file: 40
+#0 (A): features: 8 (0%), entropy: 269.076170, jumps: 27, prob: 3.33e-01, pR:  -0.30 
+#1 (B): features: 8 (0%), entropy: 269.076170, jumps: 27, prob: 3.33e-01, pR:  -0.30 
+#2 (C): features: 8 (0%), entropy: 269.076170, jumps: 27, prob: 3.33e-01, pR:  -0.30 

@@ -117,10 +117,16 @@ def train_command(args):
         train(screen_name, someones_tweets)
     print 'trained classifier.'
 
+    bestMatch, probList = classify('speeches/clinton.txt')
+    print bestMatch
+    print probList
+    sys.exit()
+
     #if --eval flag is used, then classify test set and print statistics
     if (args.eval is not None):
         #Testing (UNDER CONSTRUCTION)
         print 'evaluating algorithm...'
+
 
         temp_stats_file = open(os.path.join(__directory__, 'prob_distribution.txt'), 'w')
 
@@ -212,9 +218,11 @@ def create_crm_files(screen_names, classification_type):
             " /Best match to file #. \\(([[:graph:]]+)\\) prob: ([0-9\\.]+) /;" \
             " %s " \
             " match [:best:] (:: :best_match:) /([[:graph:]]+).css/;" \
-            " output /:*:best_match: :*:prob: \\n %s\\n / }" # %output_list
-    MATCH_VAR = 'match [:stats:] (:: :%s_prob:)' \
-            ' /\\(%s\\): [[:alpha:]]+: [[:graph:]]+, [[:alpha:]]+: [[:graph:]]+, [[:alpha:]]+: ([[:graph:]]+),/ ;'
+            " output /:*:best_match: :*:prob: \\n%s\\n/ }" # %output_list
+    MATCH_VAR = 'match [:stats:] (:: :%s_temp:)' \
+                    ' /\\(%s\\): (.*?)\\\\n/;' \
+                ' match [:%s_temp:] (:: :%s_prob: :%s_pr:)' \
+                ' /prob: ([[:graph:]]+), pR:  ([[:graph:]]+)/;'
     #create learn.crm
     learnCRM = open(os.path.join(__directory__,'learn.crm'), 'w')
     learnCRM.write(LEARN_CMD % classification_type)
@@ -223,8 +231,8 @@ def create_crm_files(screen_names, classification_type):
     #create classify.crm
     classifyCRM = open('classify.crm', 'w')
     name_list = [names + CLASSIFY_EXT for names in screen_names]
-    match_list = [MATCH_VAR % (names, names) for names in name_list] #create list of MATCH_VARs based on screen name
-    output_list = ['%s: :*:%s_prob:' % (names.split('.')[0], names) for names in name_list] #create list for output
+    match_list = [MATCH_VAR % (names, names, names, names, names) for names in name_list] #create list of MATCH_VARs based on screen name
+    output_list = ['%s: :*:%s_prob: :*:%s_pr:' % (names.split('.')[0], names, names) for names in name_list] #create list for output
 
     classifyCRM.write(CLASSIFY_CMD % (classification_type,
                                       ' '.join(name_list),
@@ -273,16 +281,19 @@ def train(screen_name, tweets):
 # probList = [ (twitterHandle1, probability1) (twitterHandle2, probability2) ...]
 def classify(textFileName):
     output =  subprocess.check_output('crm ' + os.path.join(__directory__, 'classify.crm') + ' < ' + textFileName, shell=True) #string output from crm114
+    print output
     outList = output.split()
-    bestMatch = (str(outList[0]), float(outList[1])) #(best_candidate, probability)
+    bestMatch = (str(outList[0]), float(outList[1])) #(best_match, probability)
     outList = outList[2:]
 
     probList = []
     it = iter(outList)
     for x in it:
-        probList.append((x, float(next(it))))
+        probList.append((x, float(next(it)), float(next(it)) ))
 
-    return (bestMatch, tuple(probList))
+    #probList: (match, probability, pR)
+
+    return (bestMatch, tuple(probList)) 
 
 
 def clean_workspace(screen_names):

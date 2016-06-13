@@ -1,5 +1,11 @@
 {
     isolate (:stats:)
-    classify <winnow unique microgroom> (A B C) (:stats:)
-    output /:*:stats:/
+    classify <osbf unique microgroom> (A B C) (:stats:)
+    match [:stats:] (:: :best: :prob:) \
+        /Best match to file #. \(([[:graph:]]+)\) prob: ([0-9\.]+) /
+    match [:stats:] (:: :a_temp:) \
+        /\(A\): (.*?)\\n/ 
+    match [:a_temp:] (:: :a_prob: :a_pr:) \
+        /prob: ([[:graph:]]+), pR:  ([[:graph:]]+)/
+    output /:*:best: :*:prob: \n:*:a_prob: :*:a_pr: \n/
 }
