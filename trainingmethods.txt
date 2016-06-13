@@ -1,4 +1,4 @@
-TET - Train EVerything 
+TET - Train Everything 
 Keep statistics on every known text.
 Verdict: pretty bad
 

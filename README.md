@@ -30,7 +30,7 @@ Some CRM114 programs may take additional arguments as well
 
 Python wrappers (which can be find in individual projects) should be run normally. E.g.
 ```python
-python pythonwrapper.py --help
+python pythonwrapper.py -h
 ```
 
 
