@@ -1,0 +1,9 @@
+CLASSIFY succeeds; success probability: 1.0000  pR: 306.6527
+Best match to file #0 (A) prob: 1.0000  pR: 256.6481  
+Total features in input file: 15428
+#0 (A): hits: 13546, ufeats: 13546, prob: 1.00e+00, pR: 256.65 
+#1 (B): hits: 0, ufeats: 0, prob: 1.12e-257, pR: -256.95 
+#2 (C): hits: 0, ufeats: 0, prob: 1.12e-257, pR: -256.95 
+
+A 1.0000
+hits: 13546, ufeats: 13546, prob: 1.00e+00, pR: 256.65 
