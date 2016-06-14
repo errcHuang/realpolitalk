@@ -1,5 +1,7 @@
 To-Do
 
+-Eventually make this into a python package
+-More speeches http://www.americanrhetoric.com/
 -Self improvement (if y_pred differs from y_true, then enter the corrected tweets as new training data) 
     TOE, DSTTT, etc.
 -Ability to train already created corpuses on new textfiles (e.g. python realpolitalk.py train --corpus HillaryClinton.css Goldman_Sachs_Transcript.txt DNC_2016_Convention_Speech.txt ..)

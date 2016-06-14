@@ -294,6 +294,7 @@ def untrain(trainingTxtFile, corpus_name):
             ' ' + (corpus_name+'.css') + ' < '+ trainingTxtFile, shell=True)
 
 #match: (name_of_match, prob_of_match, pr_of_match)
+#probList = [ (name1, probability1, pR1) (name2, probability2, pR2) ...]
 #train_method: (name_of_method, pR_threshold)
 def smart_train(match, probList, truth_match_name, train_method, textfilename):
     prThreshold = train_method[1]
@@ -302,6 +303,16 @@ def smart_train(match, probList, truth_match_name, train_method, textfilename):
     if train_method[0] == 'TOE':
         if truth_match_name != name_of_match: #if classifier incorrectly predicts 
             train(textfilename, truth_match_name)
+        else:
+            previousProb = probList[0][1]
+            isEqual = True
+            for probTuple in probList:
+                if probTuple[2] != previousProb:
+                    isEqual = False
+                    break
+                previousProb = probTuple[2]
+            if isEqual is False:
+                train(textfilename, truth_match_name
     elif train_method[0] == 'SSTTT':
         if truth_match_name != name_of_match: #if classifier incorrectly predicts 
             train(textfilename, truth_match_name)
