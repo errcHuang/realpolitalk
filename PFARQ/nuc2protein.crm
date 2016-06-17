@@ -1,11 +1,11 @@
 {
     isolate (:data:) /:*:_dw:/
     { #translate codon to protein
-        match <fromend> (:codon:) [:data:]/[AGCT]{3}/
-        output /codon: :*:codon:\n/
+        match <fromend> (:codon:) [:data:] \
+             /[[:space:]]*[AGCT]{3}[[:space:]]*/
         isolate (:protein:) 
         call /:translate_codon:/ [:*:codon:] (:protein:)
-        output /protein: :*:protein:\n\n/
+        output /protein: :*:protein:\n/
         liaf
     }
     alius
