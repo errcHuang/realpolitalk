@@ -1,7 +1,0 @@
-{
-    window
-    isolate (:colon:) /:/
-    isolate (:star:) /*/
-    alter (:_dw:) / Built varname as :*:colon::*:star::_dw: /
-    output /colon-star did NOT var-expand: ':*:_dw:' \n/
-}

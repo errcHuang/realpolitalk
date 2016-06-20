@@ -1,5 +1,0 @@
-{
-    match <nomultiline fromend> (:my_line:) /.*a.*/
-    output /Found an 'a' here --> :*:my_line:\n/
-    liaf
-}

@@ -1,5 +1,0 @@
-{
-    window
-    input [ /usr/share/dict/linux.words ]
-    output [ cloned.words ] /:*:_dw: /
-}

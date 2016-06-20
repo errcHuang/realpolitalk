@@ -1,6 +1,0 @@
-CLASSIFY succeeds; success probability: 1.0000  pR: 3077.3184
-Best match to file #0 (A) weight: 4.0000  pR: 6.0206  
-Total features in input file: 4
-#0 (A): features: 1.00, unseen: 4.00e+00, weight: 4.00e+00, pR:   6.02 
-#1 (B): features: 1.00, unseen: 4.00e+00, weight: 4.00e+00, pR:   6.02 
-#2 (C): features: 1.00, unseen: 4.00e+00, weight: 4.00e+00, pR:   6.02 

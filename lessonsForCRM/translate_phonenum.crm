@@ -1,9 +1,0 @@
-#get rid of everything that isn't a number, whitespace, or a punct
-translate /^-0-9.() \n\t\v/
-#turn whitespace into simple spaces
-translate /\n\t\v/ / /
-#get rid of excess spaces
-translate <unique> / / / /
-#
-accept
-output /\n/

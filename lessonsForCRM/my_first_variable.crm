@@ -1,4 +1,0 @@
-{
-    match (:my_first_variable:) /fo+o [123] bar/
-    output /My first variable -> :*:my_first_variable: \n/
-}

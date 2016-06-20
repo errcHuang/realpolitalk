@@ -1,4 +1,0 @@
-{
-    match [:_dw: /abc.*xyz/ 4 20 /[[:alpha:]]+/] /.*/ (:my_stuff:)
-    output /Found my_stuff as ":*:my_stuff:"\n/
-}

@@ -1,5 +1,0 @@
-{
-    match (:: :last: :first: :dob:) \
-        /([[:alpha:]]+) ([[:alpha:]]+) [[:alpha:]]+ ([[:graph:]]+)/
-    output /Last = :*:last: \nFirst = :*:first:\nDoB = :*:dob:\n/
-}

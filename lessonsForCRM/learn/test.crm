@@ -1,2 +1,0 @@
-{
-    match [:my_var: /alpha.*omega/] /foo bar baz/

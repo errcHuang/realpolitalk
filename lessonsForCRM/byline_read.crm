@@ -1,8 +1,0 @@
-{
-    input <byline>
-    output /Line #1 = :*:_dw:\n/
-    input <byline>
-    output /Line #2 = :*:_dw:\n/
-    input <byline>
-    output /Line #3 = :*:_dw:\n/
-}

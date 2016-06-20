@@ -1,7 +1,0 @@
-{
-    output /start here.../
-    goto /:jump_over:/
-    output /You should not see/
-    :jump_over:
-    output /and finished. \n/
-}

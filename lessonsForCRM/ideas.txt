@@ -1,1 +1,0 @@
-Web crawler that analyzes the news and checks what's popular

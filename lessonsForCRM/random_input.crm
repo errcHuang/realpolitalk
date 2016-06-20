@@ -1,4 +1,0 @@
-{
-    input [foo.txt 10 5]
-    output /The five characters are ':*:_dw:'\n/
-}

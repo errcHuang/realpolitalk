@@ -1,5 +1,0 @@
-{
-    window
-    syscall /ls -a \. / () (:_dw:)
-    output /:*:_dw:/
-}

@@ -1,9 +1,0 @@
-{
-    output /starting here.../
-    {
-        output /in the inner block, aboyt to toFAIL.../
-        fail
-        output / ayyy lmao /
-    }
-    output /back\n/
-}
