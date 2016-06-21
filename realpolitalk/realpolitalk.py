@@ -119,7 +119,7 @@ def train_command(args):
         training_tweets = all_tweets
     #--trainmethod
     if (args.trainmethod is None):
-        trainmethod = ['N/A', 0]
+        trainmethod = ['TET', 0] #default Train Every Thing - not recommended...
 
 
     #train classifier
