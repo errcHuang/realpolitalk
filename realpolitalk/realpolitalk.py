@@ -300,10 +300,12 @@ def smart_train(match, probList, truth_match_name, train_method, textfilename):
     prThreshold = train_method[1]
     name_of_match = match[0]
     pr = match[2]
-    if train_method[0] == 'TOE':
+    if train_method[0] == 'TOE': #train on error
         if truth_match_name != name_of_match: #if classifier incorrectly predicts 
             train(textfilename, truth_match_name)
         else:
+            #make sure that all the probabilities are different
+            #else it's basically the same as random guessing
             previousProb = probList[0][1]
             isEqual = True
             for probTuple in probList:
@@ -311,8 +313,9 @@ def smart_train(match, probList, truth_match_name, train_method, textfilename):
                     isEqual = False
                     break
                 previousProb = probTuple[2]
-            if isEqual is False:
-                train(textfilename, truth_match_name
+            
+            if isEqual is True:
+                train(textfilename, truth_match_name)
     elif train_method[0] == 'SSTTT':
         if truth_match_name != name_of_match: #if classifier incorrectly predicts 
             train(textfilename, truth_match_name)
