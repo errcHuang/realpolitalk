@@ -218,13 +218,13 @@ def crm_files_exist(screen_names):
     return allFilesExist
 
 
-def create_crm_files(screen_names, classification_type):
+def create_crm_files(screen_names, classification_type, word_pattern='[[:graph:]]+'):
     #classification_type = classification_type.rstrip('>').strip('<')
     CLASSIFY_EXT = '.css'    #create files if they don't exist
-    UNLEARN_CMD = "{ learn <%s refute> (:*:_arg2:) }"
-    LEARN_CMD = "{ learn <%s> (:*:_arg2:) }"
+    UNLEARN_CMD = "{ learn <%s refute> (:*:_arg2:) /%s/}"
+    LEARN_CMD = "{ learn <%s> (:*:_arg2:) /%s/}"
     CLASSIFY_CMD = "{ isolate (:stats:);" \
-            " classify <%s> ( %s ) (:stats:);" \
+            " classify <%s> ( %s ) (:stats:) /%s/;" \
             " match [:stats:] (:: :best: :prob: :pr:)" \
             " /Best match to file #. \\(([[:graph:]]+)\\) [[:graph:]]+: ([0-9\\.]+)[[:space:]]+pR:[[:space:]]+([[:graph:]]+)/;" \
             " %s " \
@@ -236,12 +236,12 @@ def create_crm_files(screen_names, classification_type):
                 ' /prob: ([[:graph:]]+), pR:[[:space:]]+([[:graph:]]+)/;'
     #create learn.crm
     learnCRM = open(os.path.join(__directory__,'learn.crm'), 'w')
-    learnCRM.write(LEARN_CMD % classification_type)
+    learnCRM.write(LEARN_CMD % (classification_type, word_pattern))
     learnCRM.close()
 
     #create unlearn.crm
     unlearnCRM = open(os.path.join(__directory__, 'unlearn.crm'), 'w')
-    unlearnCRM.write(UNLEARN_CMD % classification_type)
+    unlearnCRM.write(UNLEARN_CMD % (classification_type, word_pattern))
     unlearnCRM.close()
 
     #create classify.crm
@@ -252,6 +252,7 @@ def create_crm_files(screen_names, classification_type):
 
     classifyCRM.write(CLASSIFY_CMD % (classification_type,
                                       ' '.join(name_list),
+                                      word_pattern,
                                       ' '.join(match_list),
                                       ' '.join(output_list)
                                      ))
