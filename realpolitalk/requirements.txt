@@ -1,4 +1,4 @@
 matplotlib == 1.4.3
 tweepy == 3.5.0
-numpy == 1.11.1rc1
+numpy == 1.22.0
 scikit_learn == 0.17.1
