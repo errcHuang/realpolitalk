@@ -14,10 +14,10 @@ except:
     import pickle
 
 #authentication stuff for twitter
-__consumer_key__ = 'SDSxLoUOU5eNAQEOkvvEwTFKi'
-__consumer_secret__ = 'D1ikExbbdX6xZ13IDQrDnXUqTEh1VG5vxZtp7pJ1zg6Hmteent'
-__access_token__ = '76215622-BmkW83GMTl1ZB9ctNgVB22TSBo9saoUMByrxp7mW0'
-__access_token_secret__ = 'FeUDn5Sdn1yVxLh30Wlg9pgREvc2AQtcq5uSKKUE892EV'
+__consumer_key__ = os.environ.get('TWITTER_CONSUMER_KEY', '')
+__consumer_secret__ = os.environ.get('TWITTER_CONSUMER_SECRET', '')
+__access_token__ = os.environ.get('TWITTER_ACCESS_TOKEN', '')
+__access_token_secret__ = os.environ.get('TWITTER_ACCESS_TOKEN_SECRET', '')
 
 __auth__ = tweepy.OAuthHandler(__consumer_key__, __consumer_secret__)
 __auth__.set_access_token(__access_token__, __access_token_secret__)
